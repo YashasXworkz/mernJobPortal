@@ -26,6 +26,32 @@ const auth = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      req.user = null;
+      return next();
+    }
+
+    req.token = token;
+    req.user = user;
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};
+
 const requireRole = (role) => {
   return (req, res, next) => {
     if (req.user.role !== role) {
@@ -42,4 +68,4 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { auth, requireRole, requireAdmin };
+module.exports = { auth, optionalAuth, requireRole, requireAdmin };

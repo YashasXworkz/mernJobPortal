@@ -1,7 +1,7 @@
 const express = require("express");
 const Job = require("../models/Job");
 const Application = require("../models/Application");
-const { auth, requireRole } = require("../middleware/auth");
+const { auth, optionalAuth, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -54,7 +54,7 @@ router.get("/", async (req, res) => {
 });
 
 // Updated job details route to include applicant information for employers and job seekers
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", optionalAuth, async (req, res) => {
   try {
     const job = await Job.findById(req.params.id).populate("postedBy", "name email company.name company.website");
 
@@ -84,6 +84,8 @@ router.get("/:id", auth, async (req, res) => {
           select: "_id",
         },
       });
+    } else {
+      job.applicants = undefined;
     }
 
     res.json({ job });

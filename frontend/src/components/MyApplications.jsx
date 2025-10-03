@@ -175,11 +175,7 @@ const MyApplications = () => {
                       <h5 className="mb-2 gradient-text">Employer Notes</h5>
                       <div
                         className="glass-panel p-3 border-0"
-                        style={{
-                          backdropFilter: "blur(16px)",
-                          boxShadow: "none",
-                          background: "rgba(250, 204, 21, 0.12)",
-                        }}
+                        style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
                       >
                         <p className="small mb-0">{application.notes}</p>
                       </div>

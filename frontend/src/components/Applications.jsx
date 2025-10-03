@@ -8,7 +8,8 @@ const Applications = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allApplications, setAllApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState("");
   const [jobs, setJobs] = useState([]);
@@ -27,8 +28,16 @@ const Applications = () => {
   }, []);
 
   useEffect(() => {
-    fetchApplications();
-  }, [selectedJob, statusFilter]);
+    if (statusFilter) {
+      setError("");
+    }
+    setApplications(filterApplications(allApplications, statusFilter));
+  }, [statusFilter, allApplications]);
+
+  const filterApplications = (apps, status) => {
+    if (!status) return apps;
+    return apps.filter((app) => app.status === status);
+  };
 
   const fetchJobs = async () => {
     try {
@@ -41,29 +50,42 @@ const Applications = () => {
 
   const fetchApplications = async () => {
     try {
-      setLoading(true);
-      let url = "/api/applications/job";
-
-      // If a job is selected, fetch applications for that specific job
-      if (selectedJob) {
-        url += `/${selectedJob}`;
-      } else {
-        // If no job is selected, we shouldn't fetch all applications
-        setApplications([]);
-        setLoading(false);
+      if (!selectedJob) {
+        setError("Please select a job before applying filters.");
         return;
       }
 
+      setLoading(true);
+
+      let url = "/api/applications/job";
+
+      if (selectedJob) {
+        url += `/${selectedJob}`;
+      }
+
       const response = await api.get(url);
-      setApplications(response.data.applications);
+      const fetchedApplications = response.data.applications || [];
+      setAllApplications(fetchedApplications);
+      setApplications(filterApplications(fetchedApplications, statusFilter));
       setError("");
     } catch (err) {
       setError("Failed to fetch applications");
       console.error(err);
+      setAllApplications([]);
       setApplications([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleJobChange = (event) => {
+    const value = event.target.value;
+    setSelectedJob(value);
+    setStatusFilter("");
+    setAllApplications([]);
+    setApplications([]);
+    setError("");
+    setLoading(false);
   };
 
   const updateApplicationStatus = async (
@@ -219,7 +241,7 @@ const Applications = () => {
                 <Form.Label className="text-muted">Filter by Job</Form.Label>
                 <Form.Select
                   value={selectedJob}
-                  onChange={(e) => setSelectedJob(e.target.value)}
+                  onChange={handleJobChange}
                   className="filter-select"
                 >
                   <option value="">Select a Job</option>
@@ -469,11 +491,7 @@ const Applications = () => {
                     <h5 className="mb-2 gradient-text">Your Notes</h5>
                     <div
                       className="glass-panel p-3 border-0"
-                      style={{
-                        backdropFilter: "blur(16px)",
-                        boxShadow: "none",
-                        background: "rgba(250, 204, 21, 0.12)",
-                      }}
+                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
                     >
                       <p className="small mb-0">{application.notes}</p>
                     </div>

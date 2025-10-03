@@ -222,14 +222,16 @@ const AdminPanel = () => {
 
           {users.length > 0 ? (
             <div className="table-responsive">
-              <Table hover className="dashboard-table">
+              <Table hover className="dashboard-table align-middle">
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
+                    <th style={{ width: "26%" }}>Name</th>
+                    <th style={{ width: "28%" }}>Email</th>
+                    <th style={{ width: "15%" }}>Role</th>
+                    <th style={{ width: "18%" }}>Joined</th>
+                    <th className="text-end" style={{ width: "13%" }}>
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,13 +248,8 @@ const AdminPanel = () => {
                       <td>{user.email}</td>
                       <td>{getRoleBadge(user.role)}</td>
                       <td>{formatDate(user.createdAt)}</td>
-                      <td>
-                        <Button
-                          variant="outline-light"
-                          size="sm"
-                          className="action-btn"
-                          onClick={() => confirmDeleteUser(user)}
-                        >
+                      <td className="text-end">
+                        <Button variant="danger" size="sm" onClick={() => confirmDeleteUser(user)}>
                           <i className="fas fa-trash me-1"></i>
                           Delete
                         </Button>
@@ -283,15 +280,17 @@ const AdminPanel = () => {
 
           {jobs.length > 0 ? (
             <div className="table-responsive">
-              <Table hover className="dashboard-table">
+              <Table hover className="dashboard-table align-middle">
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Company</th>
-                    <th>Location</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Posted</th>
+                    <th style={{ width: "22%" }}>Title</th>
+                    <th style={{ width: "24%" }}>Company</th>
+                    <th style={{ width: "20%" }}>Location</th>
+                    <th style={{ width: "12%" }}>Type</th>
+                    <th style={{ width: "12%" }}>Status</th>
+                    <th className="text-end" style={{ width: "10%" }}>
+                      Posted
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -310,16 +309,18 @@ const AdminPanel = () => {
                           {job.status || "active"}
                         </Badge>
                       </td>
-                      <td>{formatDate(job.createdAt)}</td>
+                      <td className="text-end">{formatDate(job.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
             </div>
           ) : (
-            <div className="text-center py-4">
+            <div className="text-center py-5">
               <i className="fas fa-briefcase fa-3x text-muted mb-3"></i>
               <h5 className="text-muted">No jobs found</h5>
+              <p className="text-muted mb-2">Create or import job listings to see them appear here.</p>
+              <small className="text-muted">Use the employer dashboard to post new openings.</small>
             </div>
           )}
         </Card.Body>

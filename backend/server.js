@@ -9,6 +9,7 @@ const jobRoutes = require('./src/routes/jobs');
 const applicationRoutes = require('./src/routes/applications');
 const uploadRoutes = require('./src/routes/upload');
 const adminRoutes = require('./src/routes/admin');
+const notificationRoutes = require('./src/routes/notifications');
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   const path = require('path');

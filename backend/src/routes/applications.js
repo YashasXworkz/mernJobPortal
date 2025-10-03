@@ -2,6 +2,7 @@ const express = require("express");
 const Application = require("../models/Application");
 const Job = require("../models/Job");
 const { auth, requireRole } = require("../middleware/auth");
+const Notification = require("../models/Notification");
 
 const router = express.Router();
 
@@ -103,6 +104,8 @@ router.put("/:applicationId", auth, requireRole("employer"), async (req, res) =>
       return res.status(403).json({ error: "Access denied" });
     }
 
+    const previousStatus = application.status;
+
     const updateData = { status, reviewedBy: req.user._id, reviewedAt: new Date() };
 
     if (notes) updateData.notes = notes;
@@ -112,6 +115,22 @@ router.put("/:applicationId", auth, requireRole("employer"), async (req, res) =>
     const updatedApplication = await Application.findByIdAndUpdate(req.params.applicationId, updateData, {
       new: true,
     }).populate("applicant", "name email");
+
+    if (status && status !== previousStatus) {
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+
+      await Notification.create({
+        recipient: application.applicant,
+        type: "application_status",
+        title: "Application status updated",
+        message: `Your application for ${application.job.title} is now ${statusLabel}.`,
+        metadata: {
+          jobId: application.job._id,
+          applicationId: application._id,
+          status,
+        },
+      });
+    }
 
     res.json({
       message: "Application updated successfully",

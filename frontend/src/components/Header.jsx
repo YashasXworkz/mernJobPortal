@@ -1,14 +1,34 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Button, Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Badge, Button, Container, Dropdown, Nav, Navbar, NavDropdown, Spinner } from "react-bootstrap";
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const {
+    user,
+    logout,
+    notifications,
+    notificationsLoading,
+    unreadNotificationCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+  } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.isRead) {
+      markNotificationRead(notification._id);
+    }
+
+    if (notification.metadata?.jobId) {
+      navigate(`/my-applications?job=${notification.metadata.jobId}`);
+    } else {
+      navigate("/my-applications");
+    }
   };
 
   return (
@@ -60,25 +80,83 @@ const Header = () => {
             )}
           </Nav>
 
-          <Nav className="d-flex align-items-center gap-2">
+          <Nav className="d-flex align-items-center gap-3">
             {user ? (
-              <NavDropdown
-                title={`Welcome, ${user.name}`}
-                id="user-dropdown"
-                align="end"
-                menuVariant="dark"
-                className="fw-semibold nav-dropdown"
-              >
-                <NavDropdown.Item as={Link} to="/profile" className="nav-dropdown-item">
-                  <i className="fas fa-user me-2"></i>
-                  Profile
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout} className="nav-dropdown-item">
-                  <i className="fas fa-sign-out-alt me-2"></i>
-                  Logout
-                </NavDropdown.Item>
-              </NavDropdown>
+              <>
+                <Dropdown align="end" className="notification-dropdown">
+                  <Dropdown.Toggle
+                    as={Button}
+                    variant="outline-light"
+                    className="notification-btn rounded-circle d-flex align-items-center justify-content-center position-relative"
+                  >
+                    <i className="fas fa-bell"></i>
+                    {unreadNotificationCount > 0 && (
+                      <Badge bg="danger" pill className="notification-badge">
+                        {unreadNotificationCount}
+                      </Badge>
+                    )}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu className="notification-menu">
+                    <div className="d-flex align-items-center justify-content-between px-3 py-2">
+                      <span className="fw-semibold">Notifications</span>
+                      {notifications.length > 0 && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            markAllNotificationsRead();
+                          }}
+                        >
+                          Mark all read
+                        </Button>
+                      )}
+                    </div>
+                    <Dropdown.Divider className="my-0" />
+                    <div className="notification-list">
+                      {notificationsLoading ? (
+                        <div className="px-3 py-4 text-center">
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Loading notifications...
+                        </div>
+                      ) : notifications.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-muted small">No notifications yet.</div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <Dropdown.Item
+                            key={notification._id}
+                            className={`notification-item ${notification.isRead ? "" : "unread"}`}
+                            onClick={() => handleNotificationClick(notification)}
+                          >
+                            <div className="fw-semibold small">{notification.title}</div>
+                            <div className="small text-muted">{notification.message}</div>
+                          </Dropdown.Item>
+                        ))
+                      )}
+                    </div>
+                  </Dropdown.Menu>
+                </Dropdown>
+
+                <NavDropdown
+                  title={`Welcome, ${user.name}`}
+                  id="user-dropdown"
+                  align="end"
+                  menuVariant="dark"
+                  className="fw-semibold nav-dropdown"
+                >
+                  <NavDropdown.Item as={Link} to="/profile" className="nav-dropdown-item">
+                    <i className="fas fa-user me-2"></i>
+                    Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={handleLogout} className="nav-dropdown-item">
+                    <i className="fas fa-sign-out-alt me-2"></i>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </>
             ) : (
               <>
                 <Button variant="outline-light" as={Link} to="/login" className="me-2">

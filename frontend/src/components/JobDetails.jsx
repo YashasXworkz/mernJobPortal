@@ -165,7 +165,12 @@ const JobDetails = () => {
     user &&
     user.role === "jobseeker" &&
     job.applicants &&
-    job.applicants.some((applicant) => applicant.applicant && applicant.applicant._id === user.id);
+    job.applicants.some((application) => {
+      const applicantDoc = application.applicant;
+      if (!applicantDoc) return false;
+      const applicantId = typeof applicantDoc === "object" && applicantDoc._id ? applicantDoc._id : applicantDoc;
+      return applicantId?.toString() === (user.id || user._id);
+    });
 
   return (
     <Container className="py-5">
@@ -179,8 +184,8 @@ const JobDetails = () => {
         <Card.Body className="p-4">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
             <div className="flex-grow-1">
-              <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
-                <h1 className="display-6 fw-bold gradient-text mb-0">{job.title}</h1>
+              <div className="d-flex flex-wrap align-items-center gap-3 mb-2">
+                <h1 className="h2 fw-bold gradient-text mb-0">{job.title}</h1>
                 {job.status && (
                   <Badge
                     bg={
@@ -192,16 +197,21 @@ const JobDetails = () => {
                         ? "info"
                         : "secondary"
                     }
-                    className="status-pill text-uppercase fs-6"
+                    className="status-pill text-uppercase"
                     style={{ color: "#ffffff", fontWeight: "600" }}
                   >
                     {job.status}
                   </Badge>
                 )}
               </div>
-              <p className="h4 text-muted mb-0">{job.company}</p>
+              <p className="h5 text-muted mb-0">{job.company}</p>
             </div>
             <div className="d-flex gap-2">
+              {!user && (
+                <Button variant="primary" onClick={() => navigate(`/login?redirect=${encodeURIComponent(`/jobs/${id}`)}`)}>
+                  Login to Apply
+                </Button>
+              )}
               {user && user.role === "jobseeker" && !hasApplied && (
                 <Button variant="primary" onClick={() => setShowApplicationForm((prev) => !prev)}>
                   {showApplicationForm ? "Cancel" : "Apply Now"}
@@ -243,19 +253,19 @@ const JobDetails = () => {
             <Col md={6}>
               <h5 className="mb-3">Job Details</h5>
               <div className="glass-panel p-3 border-0" style={{ backdropFilter: "blur(20px)", boxShadow: "none" }}>
-                <div className="mb-2">
+                <div className="mb-2 job-detail-item">
                   <strong>Location:</strong> 📍 {job.location}
                 </div>
-                <div className="mb-2">
+                <div className="mb-2 job-detail-item">
                   <strong>Type:</strong> 💼 {job.type}
                 </div>
                 {job.experience && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-detail-item">
                     <strong>Experience:</strong> 📊 {job.experience} level
                   </div>
                 )}
                 {job.salary && (job.salary.min != null || job.salary.max != null) && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-detail-item">
                     <strong>Salary:</strong> 💰
                     {job.salary.min != null && job.salary.max != null
                       ? ` ₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}`
@@ -264,16 +274,16 @@ const JobDetails = () => {
                       : ` Up to ₹${job.salary.max.toLocaleString()}`}
                   </div>
                 )}
-                <div className="mb-2">
+                <div className="mb-2 job-detail-item">
                   <strong>Posted:</strong> {new Date(job.createdAt).toLocaleDateString()}
                 </div>
                 {job.applicationDeadline && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-detail-item">
                     <strong>Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}
                   </div>
                 )}
                 {isJobOwner && job.applicants && job.applicants.length > 0 && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-detail-item">
                     <strong>Applications:</strong>{" "}
                     <Link to={`/applications?jobId=${job._id}`} className="gradient-text">
                       {job.applicants.length} received
@@ -287,12 +297,12 @@ const JobDetails = () => {
               <h5 className="mb-3">Company Info</h5>
               <div className="glass-panel p-3 border-0" style={{ backdropFilter: "blur(20px)", boxShadow: "none" }}>
                 {job.postedBy?.company?.name && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-company-item">
                     <strong>Company:</strong> {job.postedBy.company.name}
                   </div>
                 )}
                 {job.postedBy?.company?.website && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-company-item">
                     <strong>Website:</strong>{" "}
                     <a
                       href={job.postedBy.company.website}
@@ -305,12 +315,12 @@ const JobDetails = () => {
                   </div>
                 )}
                 {job.postedBy?.company?.location && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-company-item">
                     <strong>Location:</strong> {job.postedBy.company.location}
                   </div>
                 )}
                 {job.postedBy?.company?.description && (
-                  <div className="mb-2">
+                  <div className="mb-2 job-company-item">
                     <strong>About:</strong> {job.postedBy.company.description}
                   </div>
                 )}

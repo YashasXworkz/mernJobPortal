@@ -283,14 +283,14 @@ const Jobs = () => {
           <Col lg={12} key={job._id}>
             <Card className="job-card glass-panel border-0">
               <Card.Body className="p-4">
-                <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-4">
-                  <div className="flex-grow-1">
-                    <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+                <div className="d-flex flex-column flex-lg-row align-items-start gap-4">
+                  <div className="flex-grow-1 w-100">
+                    <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3 mb-3">
                       <h5 className="mb-0 me-1">
                         <Link
                           to={`/jobs/${job._id}`}
                           className="text-decoration-none fw-bold gradient-text"
-                          style={{ fontSize: '1.35rem' }}
+                          style={{ fontSize: "1.35rem" }}
                         >
                           {job.title}
                         </Link>
@@ -306,11 +306,9 @@ const Jobs = () => {
                       )}
                     </div>
 
-                    <div className="job-card-meta text-muted">
-                      <span>
-                        <i className="fas fa-building"></i>
-                        {job.company}
-                      </span>
+                    <p className="text-muted fw-semibold mb-3">{job.company}</p>
+
+                    <div className="job-card-meta text-muted mb-3">
                       <span>
                         <i className="fas fa-map-marker-alt"></i>
                         {job.location}
@@ -338,9 +336,9 @@ const Jobs = () => {
                     </p>
 
                     {job.skills && job.skills.length > 0 && (
-                      <div className="mb-3">
+                      <div className="d-flex flex-wrap gap-2">
                         {job.skills.slice(0, 5).map((skill, index) => (
-                          <span key={skill + index} className="skill-tag me-2 mb-2">
+                          <span key={skill + index} className="skill-tag">
                             {skill}
                           </span>
                         ))}
@@ -351,11 +349,9 @@ const Jobs = () => {
                     )}
                   </div>
 
-                  <div className="job-card-actions text-end ms-lg-4 d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto">
-                    <small className="text-muted d-block">
-                      Posted {new Date(job.createdAt).toLocaleDateString()}
-                    </small>
-                    <Button variant="primary" as={Link} to={`/jobs/${job._id}`}>
+                  <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto">
+                    <small className="text-muted d-block">Posted {new Date(job.createdAt).toLocaleDateString()}</small>
+                    <Button variant="primary" as={Link} to={`/jobs/${job._id}`} className="view-details-btn">
                       View Details
                     </Button>
                     {!loading && isEmployer && isJobOwner(job) && (

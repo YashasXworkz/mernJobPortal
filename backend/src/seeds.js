@@ -114,7 +114,7 @@ const seed = async () => {
 
     const [job1, job2] = jobs;
 
-    await Application.create({
+    const application1 = await Application.create({
       job: job1._id,
       applicant: jobseekers[0]._id,
       coverLetter: 'I would love to join TechNova and contribute to your enterprise projects.',
@@ -122,7 +122,9 @@ const seed = async () => {
       status: 'pending',
     });
 
-    await Application.create({
+    await Job.findByIdAndUpdate(job1._id, { $push: { applicants: application1._id } });
+
+    const application2 = await Application.create({
       job: job2._id,
       applicant: jobseekers[1]._id,
       coverLetter: 'My experience crafting intuitive UI makes me a great fit.',
@@ -131,6 +133,8 @@ const seed = async () => {
       reviewedAt: new Date(),
       notes: 'Strong portfolio, schedule interview.',
     });
+
+    await Job.findByIdAndUpdate(job2._id, { $push: { applicants: application2._id } });
 
     console.log('Database seeded successfully');
     process.exit(0);
