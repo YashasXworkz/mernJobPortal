@@ -1,0 +1,149 @@
+const express = require("express");
+const Application = require("../models/Application");
+const Job = require("../models/Job");
+const { auth, requireRole } = require("../middleware/auth");
+
+const router = express.Router();
+
+router.post("/:jobId", auth, requireRole("jobseeker"), async (req, res) => {
+  try {
+    const { coverLetter, resume } = req.body;
+    const jobId = req.params.jobId;
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const existingApplication = await Application.findOne({
+      job: jobId,
+      applicant: req.user._id,
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({ error: "You have already applied for this job" });
+    }
+
+    const application = new Application({
+      job: jobId,
+      applicant: req.user._id,
+      coverLetter,
+      resume,
+    });
+
+    await application.save();
+
+    await Job.findByIdAndUpdate(jobId, {
+      $push: { applicants: application._id },
+    });
+
+    res.status(201).json({
+      message: "Application submitted successfully",
+      application,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Fixed route to properly fetch job applications for employers
+router.get("/job/:jobId", auth, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.jobId);
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Check if user is the job owner (employer) or an admin
+    if (job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const applications = await Application.find({ job: req.params.jobId })
+      .populate("applicant", "name email phone profile")
+      .sort({ appliedAt: -1 });
+
+    res.json({ applications });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/my-applications", auth, requireRole("jobseeker"), async (req, res) => {
+  try {
+    const applications = await Application.find({ applicant: req.user._id })
+      .populate({
+        path: "job",
+        select: "title company location type",
+        populate: {
+          path: "postedBy",
+          select: "name company.name",
+        },
+      })
+      .sort({ appliedAt: -1 });
+
+    res.json({ applications });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/:applicationId", auth, requireRole("employer"), async (req, res) => {
+  try {
+    const { status, notes, interviewDate, interviewNotes } = req.body;
+
+    const application = await Application.findById(req.params.applicationId).populate("job");
+
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    if (application.job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const updateData = { status, reviewedBy: req.user._id, reviewedAt: new Date() };
+
+    if (notes) updateData.notes = notes;
+    if (interviewDate) updateData.interviewDate = interviewDate;
+    if (interviewNotes) updateData.interviewNotes = interviewNotes;
+
+    const updatedApplication = await Application.findByIdAndUpdate(req.params.applicationId, updateData, {
+      new: true,
+    }).populate("applicant", "name email");
+
+    res.json({
+      message: "Application updated successfully",
+      application: updatedApplication,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/:applicationId", auth, async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
+
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    if (application.applicant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    await Job.findByIdAndUpdate(application.job, {
+      $pull: { applicants: application._id },
+    });
+
+    await Application.findByIdAndDelete(req.params.applicationId);
+
+    res.json({ message: "Application withdrawn successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+module.exports = router;

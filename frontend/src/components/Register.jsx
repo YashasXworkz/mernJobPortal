@@ -1,0 +1,198 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+
+const Register = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'jobseeker',
+    phone: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      phone: formData.phone
+    });
+
+    if (result.success) {
+      navigate('/');
+    } else {
+      setError(result.error);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col md={8} lg={6}>
+          <Card className="glass-panel border-0">
+            <Card.Body className="p-4">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold gradient-text mb-2">Create Account</h2>
+                <p className="text-muted">Join JobPortal today</p>
+              </div>
+
+              {error && (
+                <Alert variant="danger" className="alert-custom">
+                  {error}
+                </Alert>
+              )}
+
+              <Form onSubmit={handleSubmit}>
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Full Name</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Enter your full name"
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Phone Number</Form.Label>
+                      <Form.Control
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="Enter your phone number"
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted">Email Address</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted">I am a</Form.Label>
+                  <Form.Select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="jobseeker">Job Seeker</option>
+                    <option value="employer">Employer</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Password</Form.Label>
+                      <Form.Control
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Create a password"
+                        minLength={6}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Confirm Password</Form.Label>
+                      <Form.Control
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Confirm your password"
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <div className="d-grid mt-4 gap-2">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </Button>
+                </div>
+              </Form>
+
+              <div className="text-center mt-4">
+                <p className="mb-0">
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-decoration-none fw-semibold gradient-text">
+                    Sign in here
+                  </Link>
+                </p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Register;
