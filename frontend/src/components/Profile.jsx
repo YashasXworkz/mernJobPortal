@@ -26,7 +26,6 @@ const initialFormState = {
   experience: '',
   location: '',
   resume: '',
-  downloadUrl: '',
   resumeFilename: '',
   companyName: '',
   companyDescription: '',
@@ -235,7 +234,6 @@ const Profile = () => {
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       toast.error('Failed to download resume');
-      console.error('Download error:', error);
     }
   };
 
@@ -243,6 +241,7 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -251,11 +250,21 @@ const Profile = () => {
 
     if (!allowedTypes.includes(file.type)) {
       toast.error('Please upload a PDF or Word document.');
+      event.target.value = ''; // Clear the input
       return;
     }
 
+    // Validate file size (8MB limit)
     if (file.size > 8 * 1024 * 1024) {
       toast.error('Resume must be 8MB or smaller.');
+      event.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Validate filename
+    if (file.name.length > 100) {
+      toast.error('Filename is too long. Please use a shorter filename.');
+      event.target.value = ''; // Clear the input
       return;
     }
 
@@ -274,7 +283,6 @@ const Profile = () => {
       setFormData((prev) => ({
         ...prev,
         resume: response.data.url,
-        downloadUrl: response.data.downloadUrl,
         resumeFilename: response.data.filename || file.name
       }));
       toast.success('Resume uploaded successfully!');

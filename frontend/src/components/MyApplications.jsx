@@ -38,7 +38,6 @@ const MyApplications = () => {
       setApplications((prev) => prev.filter((application) => application._id !== applicationId));
       toast.success("Application withdrawn successfully");
     } catch (err) {
-      console.error("Failed to withdraw application", err);
       toast.error(err.response?.data?.error || "Failed to withdraw application");
     }
   };

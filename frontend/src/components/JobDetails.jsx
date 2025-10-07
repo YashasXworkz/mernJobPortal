@@ -104,7 +104,6 @@ const JobDetails = () => {
       setJob(jobResponse.data.job);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to submit application");
-      console.error(err);
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +119,6 @@ const JobDetails = () => {
       toast.success("Job deleted successfully");
       navigate("/jobs");
     } catch (err) {
-      console.error("Failed to delete job:", err);
       toast.error(err.response?.data?.error || "Failed to delete job");
     }
   };

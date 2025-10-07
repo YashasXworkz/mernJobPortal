@@ -48,7 +48,6 @@ const AdminPanel = () => {
       setUsers(usersResponse.data.users || []);
       setApplications(applicationsResponse.data.applications || []);
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.error || "Failed to fetch dashboard data.");
     } finally {
       setLoading(false);
@@ -72,7 +71,6 @@ const AdminPanel = () => {
       setUserToDelete(null);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to delete user.");
-      console.error(err);
     }
   };
 
@@ -95,12 +93,12 @@ const AdminPanel = () => {
   };
 
   useEffect(() => {
-    if (user && !user.email.toLowerCase().includes("admin")) {
+    if (user && user.role !== 'admin') {
       toast.error("Access Denied. Admin privileges required.");
     }
   }, [user]);
 
-  if (!user || !user.email.toLowerCase().includes("admin")) {
+  if (!user || user.role !== 'admin') {
     return (
       <Container className="py-5">
         <div className="text-center text-danger fw-semibold">Access Denied. Admin privileges required.</div>

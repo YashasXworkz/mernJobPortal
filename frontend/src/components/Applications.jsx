@@ -58,7 +58,7 @@ const Applications = () => {
       const response = await api.get("/api/jobs/user/my-jobs");
       setJobs(response.data.jobs);
     } catch (err) {
-      console.error("Failed to fetch jobs:", err);
+      toast.error(err.response?.data?.error || "Failed to fetch jobs");
     }
   };
 
@@ -83,7 +83,6 @@ const Applications = () => {
       setApplications(filterApplications(fetchedApplications, statusFilter));
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to fetch applications");
-      console.error(err);
       setAllApplications([]);
       setApplications([]);
     } finally {
@@ -119,7 +118,6 @@ const Applications = () => {
 
       setShowStatusModal(false);
     } catch (err) {
-      console.error("Failed to update application status:", err);
       toast.error(err.response?.data?.error || "Failed to update application status");
     }
   };

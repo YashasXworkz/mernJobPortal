@@ -70,7 +70,13 @@ const jobSchema = new mongoose.Schema(
   }
 );
 
+// Add indexes for performance and search
 jobSchema.index({ title: "text", description: "text", company: "text" });
+jobSchema.index({ status: 1, createdAt: -1 });
+jobSchema.index({ postedBy: 1, status: 1 });
+jobSchema.index({ type: 1, location: 1 });
+jobSchema.index({ experience: 1 });
+jobSchema.index({ applicationDeadline: 1 });
 
 // Virtual for applicant count
 jobSchema.virtual("applicantCount").get(function () {

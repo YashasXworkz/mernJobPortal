@@ -118,7 +118,6 @@ const EditJob = () => {
       navigate("/jobs");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to update job");
-      console.error(err);
     } finally {
       setSubmitting(false);
     }

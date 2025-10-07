@@ -70,7 +70,7 @@ const Header = () => {
                   </>
                 )}
 
-                {user.email && user.email.toLowerCase().includes("admin") && (
+                {user.role === 'admin' && (
                   <Nav.Link as={Link} to="/admin">
                     <i className="fas fa-shield-alt me-1"></i>
                     Admin Panel

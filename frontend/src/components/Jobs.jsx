@@ -62,7 +62,6 @@ const Jobs = () => {
         setTotalPages(response.data.totalPages || 1);
       } catch (err) {
         toast.error(err.response?.data?.error || "Failed to fetch jobs");
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -135,7 +134,6 @@ const Jobs = () => {
       setJobs(response.data.jobs);
       setTotalPages(response.data.totalPages || 1);
     } catch (err) {
-      console.error("Failed to delete job:", err);
       toast.error(err.response?.data?.error || "Failed to delete job");
     } finally {
       setShowDeleteModal(false);

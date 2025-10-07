@@ -87,7 +87,6 @@ const PostJob = () => {
       navigate("/jobs");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to post job");
-      console.error(err);
     } finally {
       setLoading(false);
     }

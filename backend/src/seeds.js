@@ -18,12 +18,15 @@ const seed = async () => {
     await Job.deleteMany({});
     await Application.deleteMany({});
 
+    // Create admin user with environment variables or defaults
     const admin = await User.create({
       name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'password123',
+      email: process.env.ADMIN_EMAIL || 'admin@jobportal.com',
+      password: process.env.ADMIN_PASSWORD || 'admin123456',
       role: 'admin',
     });
+    
+    console.log(`Admin created: ${admin.email}`);
 
     const jobseekers = await User.create([
       {
