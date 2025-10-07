@@ -8,25 +8,22 @@ dotenv.config();
 
 const seed = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jobportal', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jobportal');
 
     // clear collections
     await User.deleteMany({});
     await Job.deleteMany({});
     await Application.deleteMany({});
 
-    // Create admin user with environment variables or defaults
+    // Create admin user
     const admin = await User.create({
       name: 'Admin User',
-      email: process.env.ADMIN_EMAIL || 'admin@jobportal.com',
-      password: process.env.ADMIN_PASSWORD || 'admin123456',
+      email: 'admin@jobportal.com',
+      password: 'admin123456',
       role: 'admin',
     });
     
-    console.log(`Admin created: ${admin.email}`);
+    console.log('Admin created: admin@jobportal.com');
 
     const jobseekers = await User.create([
       {
