@@ -89,7 +89,9 @@ router.post('/document', auth, documentUpload.single('file'), async (req, res) =
         {
           folder: 'jobportal/resumes',
           resource_type: 'raw',
-          public_id: `resume-${Date.now()}`
+          use_filename: true,
+          unique_filename: false,
+          public_id: `${req.file.originalname.replace(/\.[^/.]+$/, "")}_${Date.now()}`
         },
         (error, result) => {
           if (error) reject(error);
@@ -100,11 +102,20 @@ router.post('/document', auth, documentUpload.single('file'), async (req, res) =
       uploadStream.end(req.file.buffer);
     });
 
+    // Use Cloudinary's fl_attachment parameter to set the download filename
+    const baseUrl = result.secure_url;
+    const downloadUrl = baseUrl.replace(
+      '/upload/',
+      `/upload/fl_attachment:${encodeURIComponent(req.file.originalname)}/`
+    );
+    
     res.json({
       message: 'Document uploaded successfully',
-      url: result.secure_url,
+      url: baseUrl, // Original URL for viewing
+      downloadUrl: downloadUrl, // URL with proper filename for downloading
       public_id: result.public_id,
-      bytes: result.bytes
+      bytes: result.bytes,
+      filename: req.file.originalname
     });
   } catch (error) {
     const message = error.message && error.message.includes('File size') ? error.message : 'Failed to upload document';

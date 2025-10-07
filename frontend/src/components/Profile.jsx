@@ -8,10 +8,15 @@ import {
   Container,
   Form,
   Image,
+  Modal,
   Row,
   Spinner
 } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const initialFormState = {
   name: '',
@@ -21,6 +26,8 @@ const initialFormState = {
   experience: '',
   location: '',
   resume: '',
+  downloadUrl: '',
+  resumeFilename: '',
   companyName: '',
   companyDescription: '',
   companyWebsite: '',
@@ -36,6 +43,20 @@ const Profile = () => {
   const [uploading, setUploading] = useState(false);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+
+  // Create default layout plugin with zoom and download
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: (defaultTabs) => [
+      // Remove sidebar tabs to keep it clean
+    ],
+    toolbarPlugin: {
+      // Show only essential toolbar items
+      searchPlugin: {
+        keyword: ''
+      }
+    }
+  });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -66,6 +87,7 @@ const Profile = () => {
         experience: user.profile?.experience || '',
         location: user.profile?.location || '',
         resume: user.profile?.resume || '',
+        resumeFilename: user.profile?.resumeFilename || '',
         companyName: user.company?.name || '',
         companyDescription: user.company?.description || '',
         companyWebsite: user.company?.website || '',
@@ -137,7 +159,8 @@ const Profile = () => {
             .filter(Boolean),
           experience: formData.experience,
           location: formData.location,
-          resume: formData.resume
+          resume: formData.resume,
+          resumeFilename: formData.resumeFilename
         },
         company: {
           name: formData.companyName,
@@ -192,6 +215,30 @@ const Profile = () => {
     );
   }
 
+  const handleDownloadResume = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      // Create a temporary URL for the blob
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element for download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast.error('Failed to download resume');
+      console.error('Download error:', error);
+    }
+  };
+
   const handleResumeUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -226,7 +273,9 @@ const Profile = () => {
 
       setFormData((prev) => ({
         ...prev,
-        resume: response.data.url
+        resume: response.data.url,
+        downloadUrl: response.data.downloadUrl,
+        resumeFilename: response.data.filename || file.name
       }));
       toast.success('Resume uploaded successfully!');
     } catch (uploadErr) {
@@ -339,7 +388,12 @@ const Profile = () => {
                       </Col>
                       <Col lg={6}>
                         <Form.Group>
-                          <Form.Label className="text-muted">Resume</Form.Label>
+                          <Form.Label className="text-muted">
+                            Resume{' '}
+                            <small className="text-muted opacity-75">
+                              (PDF or Word, max 8MB)
+                            </small>
+                          </Form.Label>
                           <Form.Control
                             type="file"
                             accept=".pdf,.doc,.docx"
@@ -347,7 +401,6 @@ const Profile = () => {
                             className="file-input-modern"
                             disabled={resumeUploading}
                           />
-                          <Form.Text className="text-muted">Upload your resume (PDF or Word, max 8MB)</Form.Text>
                           {resumeUploading && (
                             <div className="mt-2 text-muted small">
                               <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
@@ -356,9 +409,18 @@ const Profile = () => {
                           {formData.resume && !resumeUploading && (
                             <div className="mt-2 small">
                               <strong>Current file:</strong>{' '}
-                              <a href={formData.resume} target="_blank" rel="noopener noreferrer" className="text-decoration-none gradient-text">
-                                View Resume
-                              </a>
+                              <span className="text-muted me-2">
+                                {formData.resumeFilename || 'resume.pdf'}
+                              </span>
+                              <Button
+                                variant="outline-light"
+                                size="sm"
+                                onClick={() => setShowPdfViewer(true)}
+                                className="text-muted border-0 bg-transparent"
+                                style={{ color: 'inherit', padding: '0.25rem 0.5rem' }}
+                              >
+                                <i className="fas fa-eye me-1"></i>View Resume
+                              </Button>
                             </div>
                           )}
                         </Form.Group>
@@ -472,6 +534,38 @@ const Profile = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* PDF Viewer Modal */}
+      <Modal 
+        show={showPdfViewer} 
+        onHide={() => setShowPdfViewer(false)} 
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Resume Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {formData.resume && (
+            <div style={{ height: '750px', width: '100%' }}>
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer 
+                  fileUrl={formData.resume}
+                  plugins={[defaultLayoutPluginInstance]}
+                />
+              </Worker>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowPdfViewer(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

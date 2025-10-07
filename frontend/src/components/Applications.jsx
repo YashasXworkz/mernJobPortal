@@ -4,6 +4,10 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const Applications = () => {
   const navigate = useNavigate();
@@ -21,6 +25,19 @@ const Applications = () => {
     notes: "",
     interviewDate: "",
     interviewNotes: "",
+  });
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [currentResumeUrl, setCurrentResumeUrl] = useState("");
+  const [currentApplicantName, setCurrentApplicantName] = useState("");
+
+  // Create PDF viewer plugin
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: (defaultTabs) => [],
+    toolbarPlugin: {
+      searchPlugin: {
+        keyword: ''
+      }
+    }
   });
 
   useEffect(() => {
@@ -128,6 +145,12 @@ const Applications = () => {
         statusUpdate.interviewNotes
       );
     }
+  };
+
+  const handleViewResume = (resumeUrl, applicantName) => {
+    setCurrentResumeUrl(resumeUrl);
+    setCurrentApplicantName(applicantName);
+    setShowPdfViewer(true);
   };
 
   const getStatusBadge = (status) => {
@@ -446,14 +469,17 @@ const Applications = () => {
                         {application.applicant.profile?.resume && (
                           <p className="mb-2">
                             <strong>Resume:</strong>{" "}
-                            <a
-                              href={application.applicant.profile.resume}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-decoration-none gradient-text"
+                            <Button
+                              variant="link"
+                              className="p-0 text-decoration-none gradient-text"
+                              style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                              onClick={() => handleViewResume(
+                                application.applicant.profile.resume, 
+                                application.applicant.name
+                              )}
                             >
-                              View Resume
-                            </a>
+                              <i className="fas fa-eye me-1"></i>View Resume
+                            </Button>
                           </p>
                         )}
 
@@ -578,6 +604,38 @@ const Applications = () => {
           <Button variant="primary" onClick={handleStatusSubmit}>
             <i className="fas fa-save me-2"></i>
             Update Status
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* PDF Viewer Modal */}
+      <Modal 
+        show={showPdfViewer} 
+        onHide={() => setShowPdfViewer(false)} 
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{currentApplicantName}'s Resume</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {currentResumeUrl && (
+            <div style={{ height: '750px', width: '100%' }}>
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer 
+                  fileUrl={currentResumeUrl}
+                  plugins={[defaultLayoutPluginInstance]}
+                />
+              </Worker>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowPdfViewer(false)}
+          >
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
