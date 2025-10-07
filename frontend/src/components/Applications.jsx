@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Alert, Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
+import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const Applications = () => {
   const navigate = useNavigate();
@@ -10,7 +11,6 @@ const Applications = () => {
   const [applications, setApplications] = useState([]);
   const [allApplications, setAllApplications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState("");
   const [jobs, setJobs] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
@@ -28,9 +28,6 @@ const Applications = () => {
   }, []);
 
   useEffect(() => {
-    if (statusFilter) {
-      setError("");
-    }
     setApplications(filterApplications(allApplications, statusFilter));
   }, [statusFilter, allApplications]);
 
@@ -51,7 +48,7 @@ const Applications = () => {
   const fetchApplications = async () => {
     try {
       if (!selectedJob) {
-        setError("Please select a job before applying filters.");
+        toast.error("Please select a job before applying filters.");
         return;
       }
 
@@ -67,9 +64,8 @@ const Applications = () => {
       const fetchedApplications = response.data.applications || [];
       setAllApplications(fetchedApplications);
       setApplications(filterApplications(fetchedApplications, statusFilter));
-      setError("");
     } catch (err) {
-      setError("Failed to fetch applications");
+      toast.error(err.response?.data?.error || "Failed to fetch applications");
       console.error(err);
       setAllApplications([]);
       setApplications([]);
@@ -84,7 +80,6 @@ const Applications = () => {
     setStatusFilter("");
     setAllApplications([]);
     setApplications([]);
-    setError("");
     setLoading(false);
   };
 
@@ -108,6 +103,7 @@ const Applications = () => {
       setShowStatusModal(false);
     } catch (err) {
       console.error("Failed to update application status:", err);
+      toast.error(err.response?.data?.error || "Failed to update application status");
     }
   };
 
@@ -292,12 +288,6 @@ const Applications = () => {
           </Row>
         </Card.Body>
       </Card>
-
-      {error && (
-        <Alert variant="danger" className="alert-custom">
-          {error}
-        </Alert>
-      )}
 
       {loading && (
         <div className="loading d-flex flex-column align-items-center justify-content-center">

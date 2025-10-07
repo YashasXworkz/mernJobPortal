@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
+import { Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -22,9 +23,9 @@ const EditJob = () => {
     benefits: "",
     applicationDeadline: "",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -47,9 +48,10 @@ const EditJob = () => {
           benefits: job.benefits ? job.benefits.join("\n") : "",
           applicationDeadline: job.applicationDeadline ? job.applicationDeadline.split("T")[0] : "",
         });
-        setError("");
+        setFetchError(false);
       } catch (err) {
-        setError("Failed to fetch job details");
+        toast.error(err.response?.data?.error || "Failed to fetch job details");
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
@@ -68,7 +70,6 @@ const EditJob = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
@@ -113,9 +114,10 @@ const EditJob = () => {
       });
 
       await api.put(`/api/jobs/${id}`, jobData);
+      toast.success("Job updated successfully");
       navigate("/jobs");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to update job");
+      toast.error(err.response?.data?.error || "Failed to update job");
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -133,6 +135,14 @@ const EditJob = () => {
     );
   }
 
+  if (fetchError) {
+    return (
+      <Container className="py-5">
+        <div className="text-center text-danger fw-semibold">Unable to load job details.</div>
+      </Container>
+    );
+  }
+
   return (
     <Container className="py-4">
       <Row className="justify-content-center">
@@ -143,12 +153,6 @@ const EditJob = () => {
                 <h2 className="fw-bold text-primary">Edit Job</h2>
                 <p className="text-muted">Update your job listing</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" className="alert-custom">
-                  {error}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <Row className="g-3">

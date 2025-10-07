@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,6 @@ const Register = () => {
     role: 'jobseeker',
     phone: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
@@ -28,15 +28,13 @@ const Register = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
-
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -51,9 +49,10 @@ const Register = () => {
     });
 
     if (result.success) {
+      toast.success('Account created successfully');
       navigate('/');
     } else {
-      setError(result.error);
+      toast.error(result.error || 'Failed to create account');
     }
 
     setLoading(false);
@@ -69,12 +68,6 @@ const Register = () => {
                 <h2 className="fw-bold gradient-text mb-2">Create Account</h2>
                 <p className="text-muted">Join JobPortal today</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" className="alert-custom">
-                  {error}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <Row>

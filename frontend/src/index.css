@@ -78,6 +78,17 @@ body::after {
   z-index: -1;
 }
 
+/* Toast Notification Styles */
+.Toastify__toast-container {
+  position: fixed !important;
+  z-index: 9999;
+}
+
+.Toastify__toast-container--top-right {
+  top: 80px;
+  right: 20px;
+}
+
 a {
   color: inherit;
 }

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { adminApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Alert, Badge, Button, Card, Col, Container, Modal, Row, Spinner, Table } from "react-bootstrap";
+import { Badge, Button, Card, Col, Container, Modal, Row, Spinner, Table } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -11,7 +12,6 @@ const AdminPanel = () => {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [stats, setStats] = useState({
@@ -47,10 +47,9 @@ const AdminPanel = () => {
       setJobs(recentJobs || []);
       setUsers(usersResponse.data.users || []);
       setApplications(applicationsResponse.data.applications || []);
-      setError("");
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || "Failed to fetch dashboard data.");
+      toast.error(err.response?.data?.error || "Failed to fetch dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -71,9 +70,8 @@ const AdminPanel = () => {
       }));
       setShowDeleteModal(false);
       setUserToDelete(null);
-      setError("");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to delete user.");
+      toast.error(err.response?.data?.error || "Failed to delete user.");
       console.error(err);
     }
   };
@@ -96,14 +94,16 @@ const AdminPanel = () => {
     return <Badge bg={variants[role] || "secondary"}>{role}</Badge>;
   };
 
+  useEffect(() => {
+    if (user && !user.email.toLowerCase().includes("admin")) {
+      toast.error("Access Denied. Admin privileges required.");
+    }
+  }, [user]);
+
   if (!user || !user.email.toLowerCase().includes("admin")) {
     return (
       <Container className="py-5">
-        <div className="text-center">
-          <Alert variant="danger" className="alert-custom">
-            Access Denied. Admin privileges required.
-          </Alert>
-        </div>
+        <div className="text-center text-danger fw-semibold">Access Denied. Admin privileges required.</div>
       </Container>
     );
   }
@@ -135,12 +135,6 @@ const AdminPanel = () => {
           Administrator
         </Badge>
       </div>
-
-      {error && (
-        <Alert variant="warning" className="alert-custom mb-4">
-          {error}
-        </Alert>
-      )}
 
       {/* Stats Cards */}
       <Row className="g-4 mb-4">

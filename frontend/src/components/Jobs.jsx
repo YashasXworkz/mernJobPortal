@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import {
-  Alert,
   Badge,
   Button,
   Card,
@@ -16,6 +15,7 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const initialFilters = {
   search: "",
@@ -36,7 +36,6 @@ const Jobs = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [filters, setFilters] = useState(initialFilters);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -61,9 +60,8 @@ const Jobs = () => {
         const response = await api.get("/api/jobs", { params });
         setJobs(response.data.jobs);
         setTotalPages(response.data.totalPages || 1);
-        setError("");
       } catch (err) {
-        setError("Failed to fetch jobs");
+        toast.error(err.response?.data?.error || "Failed to fetch jobs");
         console.error(err);
       } finally {
         setLoading(false);
@@ -120,6 +118,7 @@ const Jobs = () => {
   const confirmDeleteJob = async () => {
     try {
       await api.delete(`/api/jobs/${jobToDelete._id}`);
+      toast.success("Job deleted successfully");
       // Refresh the jobs list
       const params = {
         page,
@@ -137,7 +136,7 @@ const Jobs = () => {
       setTotalPages(response.data.totalPages || 1);
     } catch (err) {
       console.error("Failed to delete job:", err);
-      setError("Failed to delete job");
+      toast.error(err.response?.data?.error || "Failed to delete job");
     } finally {
       setShowDeleteModal(false);
       setJobToDelete(null);
@@ -264,12 +263,6 @@ const Jobs = () => {
           </Form>
         </Card.Body>
       </Card>
-
-      {error && (
-        <Alert variant="danger" className="alert-custom">
-          {error}
-        </Alert>
-      )}
 
       {loading && (
         <div className="loading">

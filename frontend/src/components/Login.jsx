@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
@@ -24,15 +24,15 @@ const Login = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
     setLoading(true);
 
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
+      toast.success('Logged in successfully');
       navigate('/');
     } else {
-      setError(result.error);
+      toast.error(result.error || 'Failed to sign in');
     }
 
     setLoading(false);
@@ -48,12 +48,6 @@ const Login = () => {
                 <h2 className="fw-bold gradient-text mb-2">Welcome Back</h2>
                 <p className="text-muted">Sign in to continue your journey.</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" className="alert-custom">
-                  {error}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">

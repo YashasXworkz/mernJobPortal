@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
+import { Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -23,7 +24,6 @@ const PostJob = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(defaultFormState);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Pre-fill company name from user's profile
@@ -46,7 +46,6 @@ const PostJob = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -84,9 +83,10 @@ const PostJob = () => {
       }
 
       await api.post("/api/jobs", jobData);
+      toast.success("Job posted successfully");
       navigate("/jobs");
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to post job");
+      toast.error(err.response?.data?.error || "Failed to post job");
       console.error(err);
     } finally {
       setLoading(false);
@@ -103,12 +103,6 @@ const PostJob = () => {
                 <h2 className="fw-bold gradient-text">Post a New Job</h2>
                 <p className="text-muted">Create a job listing to find the perfect candidate</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" className="alert-custom">
-                  {error}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <Row className="g-3">

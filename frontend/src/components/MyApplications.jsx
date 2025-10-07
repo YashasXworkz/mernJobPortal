@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
-import { Alert, Badge, Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Badge, Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const statusVariants = {
   pending: "warning",
@@ -14,7 +15,6 @@ const statusVariants = {
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -22,9 +22,8 @@ const MyApplications = () => {
         setLoading(true);
         const response = await api.get("/api/applications/my-applications");
         setApplications(response.data.applications);
-        setError("");
       } catch (err) {
-        setError("Failed to fetch applications");
+        toast.error(err.response?.data?.error || "Failed to fetch applications");
       } finally {
         setLoading(false);
       }
@@ -37,8 +36,10 @@ const MyApplications = () => {
     try {
       await api.delete(`/api/applications/${applicationId}`);
       setApplications((prev) => prev.filter((application) => application._id !== applicationId));
+      toast.success("Application withdrawn successfully");
     } catch (err) {
       console.error("Failed to withdraw application", err);
+      toast.error(err.response?.data?.error || "Failed to withdraw application");
     }
   };
 
@@ -58,12 +59,6 @@ const MyApplications = () => {
           {applications.length} applications
         </Badge>
       </div>
-
-      {error && (
-        <Alert variant="danger" className="alert-custom">
-          {error}
-        </Alert>
-      )}
 
       {loading && (
         <div className="d-flex flex-column align-items-center justify-content-center py-5">

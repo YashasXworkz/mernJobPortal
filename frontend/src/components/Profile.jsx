@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import {
-  Alert,
   Button,
   Card,
   Col,
@@ -12,6 +11,7 @@ import {
   Row,
   Spinner
 } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
 const initialFormState = {
   name: '',
@@ -34,8 +34,6 @@ const Profile = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [resumeUploading, setResumeUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -44,9 +42,8 @@ const Profile = () => {
       try {
         const response = await api.get('/api/auth/me');
         setUser(response.data.user);
-        setError('');
       } catch (err) {
-        setError('Failed to load profile data. Please refresh or log in again.');
+        toast.error('Failed to load profile data. Please refresh or log in again.');
       } finally {
         setProfileLoading(false);
       }
@@ -91,18 +88,16 @@ const Profile = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
+      toast.error('Please select a valid image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB');
+      toast.error('File size must be less than 5MB');
       return;
     }
 
     setUploading(true);
-    setError('');
-    setSuccess('');
 
     try {
       const uploadFormData = new FormData();
@@ -118,10 +113,9 @@ const Profile = () => {
         ...prev,
         companyLogo: response.data.url
       }));
-
-      setSuccess('Company logo uploaded successfully!');
+      toast.success('Company logo uploaded successfully!');
     } catch (err) {
-      setError('Failed to upload image. Please try again.');
+      toast.error(err.response?.data?.error || 'Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -129,8 +123,6 @@ const Profile = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
-    setSuccess('');
     setLoading(true);
 
     try {
@@ -168,9 +160,9 @@ const Profile = () => {
 
       const response = await api.put('/api/auth/profile', updateData);
       setUser(response.data.user);
-      setSuccess('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update profile');
+      toast.error(err.response?.data?.error || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -191,9 +183,7 @@ const Profile = () => {
     return (
       <Container className="py-5">
         <div className="text-center">
-          <Alert variant="warning" className="alert-custom">
-            Unable to load profile data. Please try logging out and logging back in.
-          </Alert>
+          <p className="text-warning fw-semibold">Unable to load profile data. Please try logging out and logging back in.</p>
           <Button variant="primary" href="/login">
             Go to Login
           </Button>
@@ -213,17 +203,16 @@ const Profile = () => {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      setError('Please upload a PDF or Word document.');
+      toast.error('Please upload a PDF or Word document.');
       return;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      setError('Resume must be 8MB or smaller.');
+      toast.error('Resume must be 8MB or smaller.');
       return;
     }
 
     setResumeUploading(true);
-    setError('');
 
     try {
       const uploadFormData = new FormData();
@@ -239,9 +228,9 @@ const Profile = () => {
         ...prev,
         resume: response.data.url
       }));
-      setSuccess('Resume uploaded successfully!');
+      toast.success('Resume uploaded successfully!');
     } catch (uploadErr) {
-      setError(uploadErr.response?.data?.error || 'Failed to upload resume.');
+      toast.error(uploadErr.response?.data?.error || 'Failed to upload resume.');
     } finally {
       setResumeUploading(false);
     }
@@ -260,18 +249,6 @@ const Profile = () => {
                 </h2>
                 <p className="text-muted mb-0">Keep your information fresh to attract the best opportunities.</p>
               </div>
-
-              {error && (
-                <Alert variant="danger" className="alert-custom mb-4">
-                  {error}
-                </Alert>
-              )}
-
-              {success && (
-                <Alert variant="success" className="alert-custom mb-4">
-                  {success}
-                </Alert>
-              )}
 
               <Form onSubmit={handleSubmit}>
                 <div className="mb-4">

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
-import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Alert, Modal } from "react-bootstrap";
+import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "react-bootstrap";
+import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 const JobDetails = () => {
@@ -10,8 +11,7 @@ const JobDetails = () => {
   const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // Add success state
+  const [fetchError, setFetchError] = useState(false);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applicationData, setApplicationData] = useState({
     coverLetter: "",
@@ -27,9 +27,10 @@ const JobDetails = () => {
         setLoading(true);
         const response = await api.get(`/api/jobs/${id}`);
         setJob(response.data.job);
-        setError("");
+        setFetchError(false);
       } catch (err) {
-        setError("Failed to fetch job details");
+        toast.error(err.response?.data?.error || "Failed to fetch job details");
+        setFetchError(true);
       } finally {
         setLoading(false);
       }
@@ -56,17 +57,16 @@ const JobDetails = () => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
     if (!allowedTypes.includes(file.type)) {
-      setError("Please upload a PDF or Word document.");
+      toast.error("Please upload a PDF or Word document.");
       return;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      setError("Resume must be 8MB or smaller.");
+      toast.error("Resume must be 8MB or smaller.");
       return;
     }
 
     setResumeUploading(true);
-    setError("");
 
     try {
       const formData = new FormData();
@@ -83,7 +83,7 @@ const JobDetails = () => {
         resume: response.data.url,
       }));
     } catch (uploadError) {
-      setError(uploadError.response?.data?.error || "Failed to upload resume.");
+      toast.error(uploadError.response?.data?.error || "Failed to upload resume.");
     } finally {
       setResumeUploading(false);
     }
@@ -92,20 +92,18 @@ const JobDetails = () => {
   const handleApply = async (event) => {
     event.preventDefault();
     setSubmitting(true);
-    setSuccess(""); // Clear any previous success message
-    setError(""); // Clear any previous error
 
     try {
       const response = await api.post(`/api/applications/${id}`, applicationData);
       setShowApplicationForm(false);
       setApplicationData({ coverLetter: "", resume: "" });
-      setSuccess(response.data.message || "Application submitted successfully!");
+      toast.success(response.data.message || "Application submitted successfully!");
 
       // Refresh job details to show updated applicants count
       const jobResponse = await api.get(`/api/jobs/${id}`);
       setJob(jobResponse.data.job);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to submit application");
+      toast.error(err.response?.data?.error || "Failed to submit application");
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -119,10 +117,11 @@ const JobDetails = () => {
   const handleDeleteJob = async () => {
     try {
       await api.delete(`/api/jobs/${id}`);
+      toast.success("Job deleted successfully");
       navigate("/jobs");
     } catch (err) {
       console.error("Failed to delete job:", err);
-      setError("Failed to delete job");
+      toast.error(err.response?.data?.error || "Failed to delete job");
     }
   };
 
@@ -137,12 +136,10 @@ const JobDetails = () => {
     );
   }
 
-  if (error) {
+  if (fetchError) {
     return (
       <Container className="py-5">
-        <div className="text-center">
-          <div className="alert alert-danger">{error}</div>
-        </div>
+        <div className="text-center text-danger fw-semibold">Unable to load job details.</div>
       </Container>
     );
   }
@@ -150,9 +147,7 @@ const JobDetails = () => {
   if (!job) {
     return (
       <Container className="py-5">
-        <div className="text-center">
-          <div className="alert alert-warning">Job not found</div>
-        </div>
+        <div className="text-center text-warning fw-semibold">Job not found.</div>
       </Container>
     );
   }
@@ -234,20 +229,6 @@ const JobDetails = () => {
               )}
             </div>
           </div>
-
-          {/* Success message */}
-          {success && (
-            <Alert variant="success" onClose={() => setSuccess("")} dismissible>
-              {success}
-            </Alert>
-          )}
-
-          {/* Error message */}
-          {error && (
-            <Alert variant="danger" onClose={() => setError("")} dismissible>
-              {error}
-            </Alert>
-          )}
 
           <Row className="g-4">
             <Col md={6}>
