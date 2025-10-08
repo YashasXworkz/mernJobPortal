@@ -1,64 +1,67 @@
 # MERN Job Portal
 
-A full-stack job portal that connects job seekers and employers. The backend provides REST APIs for authentication, job postings, applications, uploads, and admin actions, while the frontend delivers a responsive dashboard-driven experience built with React and Vite.
+A full-stack job portal application connecting job seekers and employers. Built with React, Node.js, Express, and MongoDB.
 
 ## Features
-- **Authentication** Email/password registration, login, and profile management with JWT-based sessions (`backend/src/routes/auth.js`).
-- **Job management** Employers can post, edit, and delete jobs, including filtering and search (`backend/src/routes/jobs.js`).
-- **Applications** Job seekers can apply, track status, and employers can review and update applications (`backend/src/routes/applications.js`).
-- **File uploads** Cloudinary-backed image and resume uploads (`backend/src/routes/upload.js`).
-- **Admin tools** Admin endpoints for managing platform data (`backend/src/routes/admin.js`).
+- **User Authentication** - Register/Login for job seekers, employers, and admin
+- **Job Management** - Post, edit, delete, and search jobs
+- **Application System** - Apply for jobs and track application status
+- **Resume Upload** - Upload and view resumes with PDF viewer
+- **Admin Dashboard** - Manage users, jobs, and applications
+- **Responsive Design** - Works on desktop and mobile devices
 
-## Project Structure
-- **`backend/`** Express + MongoDB API (`server.js`) with Mongoose models and middleware.
-- **`frontend/`** React (Vite) SPA (`src/App.jsx`) using React Router, Bootstrap UI, and Axios API client (`src/lib/api.js`).
+## Tech Stack
+- **Frontend:** React, Bootstrap, React Router
+- **Backend:** Node.js, Express.js, MongoDB
+- **Authentication:** JWT tokens
+- **File Storage:** Cloudinary
+- **UI:** React Bootstrap, Toast notifications
 
 ## Prerequisites
-- Node.js 18+
-- MongoDB instance (local or hosted)
-- Cloudinary account for asset storage (optional but required for uploads)
+- Node.js (v16 or higher)
+- MongoDB (local or MongoDB Atlas)
+- Cloudinary account (for file uploads)
 
-## Environment Variables
-Create `backend/.env` (not committed) with at least:
+## Environment Setup
+Create `backend/.env` file:
 ```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/jobportal
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=your_jwt_secret_key
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-NODE_ENV=development
-```
-Create `frontend/.env` for the API base URL (defaults to `http://localhost:5000` if omitted):
-```
-VITE_API_URL=http://localhost:5000
 ```
 
-## Setup & Development
-1. Install dependencies in both workspaces:
-   - `cd backend && npm install`
-   - `cd frontend && npm install`
-2. Start the backend API:
-   - `npm run dev` (uses `nodemon`)
-3. Start the frontend app:
-   - `npm run dev` (Vite dev server)
-4. Visit the frontend (default `http://localhost:5173`).
+## Installation & Setup
+1. **Install Dependencies:**
+   ```bash
+   # Backend
+   cd backend
+   npm install
 
-## Database Seeding
-Optional sample data is available via `backend/src/seeds.js`. Run once after configuring `backend/.env`:
-```
-cd backend
-node src/seeds.js
-```
+   # Frontend
+   cd frontend
+   npm install
+   ```
 
-## Production Build
-- Build frontend assets: `cd frontend && npm run build` (output in `frontend/dist/`).
-- Serve built frontend from Express automatically when `NODE_ENV=production` (`server.js`).
-- Start backend in prod mode: `cd backend && npm start`.
+2. **Seed Database (Optional):**
+   ```bash
+   cd backend
+   node src/seeds.js
+   ```
 
-## Testing & Linting
-- Backend tests placeholder: `npm test` (none configured yet).
-- Frontend linting: `cd frontend && npm run lint`.
+3. **Start Development Servers:**
+   ```bash
+   # Terminal 1 - Backend
+   cd backend
+   npm run dev
 
-## License
-Released under the ISC license (see individual `package.json` files).
+   # Terminal 2 - Frontend
+   cd frontend
+   npm run dev
+   ```
+
+4. **Access Application:**
+   - Frontend: `http://localhost:5173`
+   - Backend API: `http://localhost:5000`
