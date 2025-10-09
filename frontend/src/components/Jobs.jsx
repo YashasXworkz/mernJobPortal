@@ -9,6 +9,7 @@ import {
   Col,
   Container,
   Form,
+  Image,
   InputGroup,
   Modal,
   Pagination,
@@ -270,109 +271,141 @@ const Jobs = () => {
       )}
 
       <Row className="g-4">
-        {jobs.map((job) => (
-          <Col lg={12} key={job._id}>
-            <Card className="job-card glass-panel border-0">
-              <Card.Body className="p-4">
-                <div className="d-flex flex-column flex-lg-row align-items-start gap-4">
-                  <div className="flex-grow-1 w-100">
-                    <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3 mb-3">
-                      <h5 className="mb-0 me-1">
-                        <Link
-                          to={`/jobs/${job._id}`}
-                          className="text-decoration-none fw-bold gradient-text"
-                          style={{ fontSize: "1.35rem" }}
+        {jobs.map((job) => {
+          const companyInfo = job.postedBy?.company;
+          const companyLogo = companyInfo?.logo;
+          const companyName = companyInfo?.name || job.company;
+          const logoInitials = (companyName || "JP").slice(0, 2).toUpperCase();
+
+          return (
+            <Col lg={12} key={job._id}>
+              <Card className="job-card glass-panel border-0">
+                <Card.Body className="p-4">
+                  <div className="d-flex flex-column flex-lg-row align-items-start gap-4">
+                    <div className="flex-grow-1 w-100">
+                      <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+                        <div
+                          className="d-flex align-items-center justify-content-center rounded-4 shadow-sm"
+                          style={{
+                            width: "52px",
+                            height: "52px",
+                            background: "rgba(148, 163, 184, 0.12)",
+                            border: "1px solid rgba(148, 163, 184, 0.18)",
+                          }}
                         >
-                          {job.title}
-                        </Link>
-                      </h5>
-                      <Badge bg={statusVariants[job.status] || "secondary"} className="status-pill text-uppercase">
-                        {job.status}
-                      </Badge>
-                      {!loading && isEmployer && isJobOwner(job) && (
-                        <Badge bg="success" className="status-pill">
-                          <i className="fas fa-user me-1"></i>
-                          Your Job
-                        </Badge>
-                      )}
-                    </div>
+                          {companyLogo ? (
+                            <Image
+                              src={companyLogo}
+                              alt={`${companyName || "Company"} logo`}
+                              rounded
+                              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "15px" }}
+                            />
+                          ) : (
+                            <span className="fw-bold" style={{ color: "var(--color-primary)" }}>
+                              {logoInitials}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-grow-1">
+                          <div className="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+                            <h5 className="mb-0 me-1">
+                              <Link
+                                to={`/jobs/${job._id}`}
+                                className="text-decoration-none fw-bold gradient-text"
+                                style={{ fontSize: "1.35rem" }}
+                              >
+                                {job.title}
+                              </Link>
+                            </h5>
+                            <Badge bg={statusVariants[job.status] || "secondary"} className="status-pill text-uppercase">
+                              {job.status}
+                            </Badge>
+                            {!loading && isEmployer && isJobOwner(job) && (
+                              <Badge bg="success" className="status-pill">
+                                <i className="fas fa-user me-1"></i>
+                                Your Job
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-muted fw-semibold mb-0 mt-2">{companyName}</p>
+                        </div>
+                      </div>
 
-                    <p className="text-muted fw-semibold mb-3">{job.company}</p>
-
-                    <div className="job-card-meta text-muted mb-3">
-                      <span>
-                        <i className="fas fa-map-marker-alt"></i>
-                        {job.location}
-                      </span>
-                      <span>
-                        <i className="fas fa-briefcase"></i>
-                        {job.type}
-                      </span>
-                      {job.experience && (
+                      <div className="job-card-meta text-muted mb-3">
                         <span>
-                          <i className="fas fa-chart-line"></i>
-                          {job.experience} level
+                          <i className="fas fa-map-marker-alt"></i>
+                          {job.location}
                         </span>
-                      )}
-                      {job.salary && (
                         <span>
-                          <i className="fas fa-rupee-sign"></i>
-                          {formatSalary(job.salary)}
+                          <i className="fas fa-briefcase"></i>
+                          {job.type}
                         </span>
-                      )}
-                    </div>
-
-                    <p className="text-muted mb-3">
-                      {job.description.length > 200 ? `${job.description.substring(0, 200)}...` : job.description}
-                    </p>
-
-                    {job.skills && job.skills.length > 0 && (
-                      <div className="d-flex flex-wrap gap-2">
-                        {job.skills.slice(0, 5).map((skill, index) => (
-                          <span key={skill + index} className="skill-tag">
-                            {skill}
+                        {job.experience && (
+                          <span>
+                            <i className="fas fa-chart-line"></i>
+                            {job.experience} level
                           </span>
-                        ))}
-                        {job.skills.length > 5 && (
-                          <small className="text-muted">+{job.skills.length - 5} more skills</small>
+                        )}
+                        {job.salary && (
+                          <span>
+                            <i className="fas fa-rupee-sign"></i>
+                            {formatSalary(job.salary)}
+                          </span>
                         )}
                       </div>
-                    )}
-                  </div>
 
-                  <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto">
-                    <small className="text-muted d-block">Posted {new Date(job.createdAt).toLocaleDateString()}</small>
-                    <Button variant="primary" as={Link} to={`/jobs/${job._id}`} className="view-details-btn">
-                      View Details
-                    </Button>
-                    {!loading && isEmployer && isJobOwner(job) && (
-                      <div className="d-flex flex-column gap-2">
-                        <Button
-                          variant="outline-light"
-                          size="sm"
-                          onClick={() => handleEditJob(job._id)}
-                          className="d-flex align-items-center justify-content-center"
-                        >
-                          <i className="fas fa-edit me-1"></i>
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline-light"
-                          size="sm"
-                          onClick={() => handleDeleteJob(job)}
-                          className="d-flex align-items-center justify-content-center"
-                        >
-                          <i className="fas fa-trash me-1"></i>
-                          Delete
-                        </Button>
-                      </div>
-                    )}
+                      <p className="text-muted mb-3">
+                        {job.description.length > 200 ? `${job.description.substring(0, 200)}...` : job.description}
+                      </p>
+
+                      {job.skills && job.skills.length > 0 && (
+                        <div className="d-flex flex-wrap gap-2">
+                          {job.skills.slice(0, 5).map((skill, index) => (
+                            <span key={skill + index} className="skill-tag">
+                              {skill}
+                            </span>
+                          ))}
+                          {job.skills.length > 5 && (
+                            <small className="text-muted">+{job.skills.length - 5} more skills</small>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto">
+                      <small className="text-muted d-block">Posted {new Date(job.createdAt).toLocaleDateString()}</small>
+                      <Button variant="primary" as={Link} to={`/jobs/${job._id}`} className="view-details-btn">
+                        View Details
+                      </Button>
+                      {!loading && isEmployer && isJobOwner(job) && (
+                        <div className="d-flex flex-column gap-2">
+                          <Button
+                            variant="outline-light"
+                            size="sm"
+                            onClick={() => handleEditJob(job._id)}
+                            className="d-flex align-items-center justify-content-center"
+                          >
+                            <i className="fas fa-edit me-1"></i>
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline-light"
+                            size="sm"
+                            onClick={() => handleDeleteJob(job)}
+                            className="d-flex align-items-center justify-content-center"
+                          >
+                            <i className="fas fa-trash me-1"></i>
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
+                </Card.Body>
+              </Card>
+            </Col>
+          );
+        })}
       </Row>
 
       {!loading && jobs.length === 0 && (

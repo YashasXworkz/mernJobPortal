@@ -165,4 +165,47 @@ router.delete("/:applicationId", auth, async (req, res) => {
   }
 });
 
+// Update application by job seeker (only pending applications)
+router.put("/update/:applicationId", auth, requireRole("jobseeker"), async (req, res) => {
+  try {
+    const { coverLetter, resume } = req.body;
+    const applicationId = req.params.applicationId;
+
+    const application = await Application.findById(applicationId);
+    
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    // Check if the application belongs to the current user
+    if (application.applicant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "You can only update your own applications" });
+    }
+
+    // Only allow updating pending applications
+    if (application.status !== 'pending') {
+      return res.status(400).json({ error: "You can only update pending applications" });
+    }
+
+    // Update fields
+    const updateData = {};
+    if (coverLetter !== undefined) updateData.coverLetter = coverLetter;
+    if (resume !== undefined) updateData.resume = resume;
+
+    const updatedApplication = await Application.findByIdAndUpdate(
+      applicationId,
+      updateData,
+      { new: true }
+    ).populate('job', 'title company location');
+
+    res.json({ 
+      message: "Application updated successfully",
+      application: updatedApplication 
+    });
+  } catch (error) {
+    console.error('Failed to update application', error);
+    res.status(500).json({ error: "Failed to update application" });
+  }
+});
+
 module.exports = router;

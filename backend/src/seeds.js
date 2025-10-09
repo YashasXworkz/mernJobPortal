@@ -36,7 +36,7 @@ const seed = async () => {
           skills: ['JavaScript', 'React', 'Node.js'],
           experience: '3 years in web development',
           location: 'Bangalore, India',
-          resume: 'https://example.com/resume-alice.pdf',
+          resume: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
         },
       },
       {
@@ -49,7 +49,7 @@ const seed = async () => {
           skills: ['Node.js', 'Express', 'MongoDB'],
           experience: '5 years building APIs',
           location: 'Pune, India',
-          resume: 'https://example.com/resume-bob.pdf',
+          resume: 'https://www.africau.edu/images/default/sample.pdf',
         },
       },
     ]);

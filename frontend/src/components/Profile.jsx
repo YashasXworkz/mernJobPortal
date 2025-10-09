@@ -1,37 +1,27 @@
-import { useEffect, useState } from 'react';
-import api from '../lib/api';
-import { useAuth } from '../contexts/AuthContext.jsx';
-import {
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  Image,
-  Modal,
-  Row,
-  Spinner
-} from 'react-bootstrap';
-import { toast } from 'react-toastify';
-import { Worker, Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import { useEffect, useState } from "react";
+import api from "../lib/api";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { Button, Card, Col, Container, Form, Image, Modal, Row, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 
 const initialFormState = {
-  name: '',
-  phone: '',
-  bio: '',
-  skills: '',
-  experience: '',
-  location: '',
-  resume: '',
-  resumeFilename: '',
-  companyName: '',
-  companyDescription: '',
-  companyWebsite: '',
-  companyLocation: '',
-  companyLogo: ''
+  name: "",
+  phone: "",
+  bio: "",
+  skills: "",
+  experience: "",
+  location: "",
+  resume: "",
+  resumeFilename: "",
+  companyName: "",
+  companyDescription: "",
+  companyWebsite: "",
+  companyLocation: "",
+  companyLogo: "",
 };
 
 const Profile = () => {
@@ -52,18 +42,18 @@ const Profile = () => {
     toolbarPlugin: {
       // Show only essential toolbar items
       searchPlugin: {
-        keyword: ''
-      }
-    }
+        keyword: "",
+      },
+    },
   });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await api.get('/api/auth/me');
+        const response = await api.get("/api/auth/me");
         setUser(response.data.user);
       } catch (err) {
-        toast.error('Failed to load profile data. Please refresh or log in again.');
+        toast.error("Failed to load profile data. Please refresh or log in again.");
       } finally {
         setProfileLoading(false);
       }
@@ -79,19 +69,19 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || '',
-        phone: user.phone || '',
-        bio: user.profile?.bio || '',
-        skills: user.profile?.skills?.join(', ') || '',
-        experience: user.profile?.experience || '',
-        location: user.profile?.location || '',
-        resume: user.profile?.resume || '',
-        resumeFilename: user.profile?.resumeFilename || '',
-        companyName: user.company?.name || '',
-        companyDescription: user.company?.description || '',
-        companyWebsite: user.company?.website || '',
-        companyLocation: user.company?.location || '',
-        companyLogo: user.company?.logo || ''
+        name: user.name || "",
+        phone: user.phone || "",
+        bio: user.profile?.bio || "",
+        skills: user.profile?.skills?.join(", ") || "",
+        experience: user.profile?.experience || "",
+        location: user.profile?.location || "",
+        resume: user.profile?.resume || "",
+        resumeFilename: user.profile?.resumeFilename || "",
+        companyName: user.company?.name || "",
+        companyDescription: user.company?.description || "",
+        companyWebsite: user.company?.website || "",
+        companyLocation: user.company?.location || "",
+        companyLogo: user.company?.logo || "",
       });
     }
   }, [user]);
@@ -100,7 +90,7 @@ const Profile = () => {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -108,13 +98,13 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
+      toast.error("File size must be less than 5MB");
       return;
     }
 
@@ -122,21 +112,21 @@ const Profile = () => {
 
     try {
       const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
+      uploadFormData.append("file", file);
 
-      const response = await api.post('/api/upload/image', uploadFormData, {
+      const response = await api.post("/api/upload/image", uploadFormData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       setFormData((prev) => ({
         ...prev,
-        companyLogo: response.data.url
+        companyLogo: response.data.url,
       }));
-      toast.success('Company logo uploaded successfully!');
+      toast.success("Company logo uploaded successfully!");
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to upload image. Please try again.');
+      toast.error(err.response?.data?.error || "Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -153,38 +143,38 @@ const Profile = () => {
         profile: {
           bio: formData.bio,
           skills: formData.skills
-            .split(',')
+            .split(",")
             .map((skill) => skill.trim())
             .filter(Boolean),
           experience: formData.experience,
           location: formData.location,
           resume: formData.resume,
-          resumeFilename: formData.resumeFilename
+          resumeFilename: formData.resumeFilename,
         },
         company: {
           name: formData.companyName,
           description: formData.companyDescription,
           website: formData.companyWebsite,
           location: formData.companyLocation,
-          logo: formData.companyLogo
-        }
+          logo: formData.companyLogo,
+        },
       };
 
-      if (user?.role === 'jobseeker') {
+      if (user?.role === "jobseeker") {
         delete updateData.company;
       }
 
       Object.keys(updateData).forEach((key) => {
-        if (updateData[key] === undefined || updateData[key] === '') {
+        if (updateData[key] === undefined || updateData[key] === "") {
           delete updateData[key];
         }
       });
 
-      const response = await api.put('/api/auth/profile', updateData);
+      const response = await api.put("/api/auth/profile", updateData);
       setUser(response.data.user);
-      toast.success('Profile updated successfully!');
+      toast.success("Profile updated successfully!");
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to update profile');
+      toast.error(err.response?.data?.error || "Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -205,7 +195,9 @@ const Profile = () => {
     return (
       <Container className="py-5">
         <div className="text-center">
-          <p className="text-warning fw-semibold">Unable to load profile data. Please try logging out and logging back in.</p>
+          <p className="text-warning fw-semibold">
+            Unable to load profile data. Please try logging out and logging back in.
+          </p>
           <Button variant="primary" href="/login">
             Go to Login
           </Button>
@@ -218,22 +210,22 @@ const Profile = () => {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      
+
       // Create a temporary URL for the blob
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary anchor element for download
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename || 'resume.pdf';
+      link.download = filename || "resume.pdf";
       document.body.appendChild(link);
       link.click();
-      
+
       // Clean up
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      toast.error('Failed to download resume');
+      toast.error("Failed to download resume");
     }
   };
 
@@ -243,28 +235,28 @@ const Profile = () => {
 
     // Validate file type
     const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PDF or Word document.');
-      event.target.value = ''; // Clear the input
+      toast.error("Please upload a PDF or Word document.");
+      event.target.value = ""; // Clear the input
       return;
     }
 
     // Validate file size (8MB limit)
     if (file.size > 8 * 1024 * 1024) {
-      toast.error('Resume must be 8MB or smaller.');
-      event.target.value = ''; // Clear the input
+      toast.error("Resume must be 8MB or smaller.");
+      event.target.value = ""; // Clear the input
       return;
     }
 
     // Validate filename
     if (file.name.length > 100) {
-      toast.error('Filename is too long. Please use a shorter filename.');
-      event.target.value = ''; // Clear the input
+      toast.error("Filename is too long. Please use a shorter filename.");
+      event.target.value = ""; // Clear the input
       return;
     }
 
@@ -272,22 +264,22 @@ const Profile = () => {
 
     try {
       const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
+      uploadFormData.append("file", file);
 
-      const response = await api.post('/api/upload/document', uploadFormData, {
+      const response = await api.post("/api/upload/document", uploadFormData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       setFormData((prev) => ({
         ...prev,
         resume: response.data.url,
-        resumeFilename: response.data.filename || file.name
+        resumeFilename: response.data.filename || file.name,
       }));
-      toast.success('Resume uploaded successfully!');
+      toast.success("Resume uploaded successfully!");
     } catch (uploadErr) {
-      toast.error(uploadErr.response?.data?.error || 'Failed to upload resume.');
+      toast.error(uploadErr.response?.data?.error || "Failed to upload resume.");
     } finally {
       setResumeUploading(false);
     }
@@ -302,7 +294,7 @@ const Profile = () => {
               <div className="text-center mb-5">
                 <span className="hero-eyebrow mb-2 d-inline-block">Manage your journey</span>
                 <h2 className="fw-bold gradient-text mb-2">
-                  {user.role === 'employer' ? 'Company Profile' : 'Your Profile'}
+                  {user.role === "employer" ? "Company Profile" : "Your Profile"}
                 </h2>
                 <p className="text-muted mb-0">Keep your information fresh to attract the best opportunities.</p>
               </div>
@@ -339,7 +331,7 @@ const Profile = () => {
                   </Row>
                 </div>
 
-                {user.role === 'jobseeker' && (
+                {user.role === "jobseeker" && (
                   <div className="mb-4">
                     <h4 className="profile-section-title">Career Snapshot</h4>
                     <Row className="g-4">
@@ -397,10 +389,7 @@ const Profile = () => {
                       <Col lg={6}>
                         <Form.Group>
                           <Form.Label className="text-muted">
-                            Resume{' '}
-                            <small className="text-muted opacity-75">
-                              (PDF or Word, max 8MB)
-                            </small>
+                            Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small>
                           </Form.Label>
                           <Form.Control
                             type="file"
@@ -416,16 +405,14 @@ const Profile = () => {
                           )}
                           {formData.resume && !resumeUploading && (
                             <div className="mt-2 small">
-                              <strong>Current file:</strong>{' '}
-                              <span className="text-muted me-2">
-                                {formData.resumeFilename || 'resume.pdf'}
-                              </span>
+                              <strong>Current file:</strong>{" "}
+                              <span className="text-muted me-2">{formData.resumeFilename || "resume.pdf"}</span>
                               <Button
                                 variant="outline-light"
                                 size="sm"
                                 onClick={() => setShowPdfViewer(true)}
                                 className="text-muted border-0 bg-transparent"
-                                style={{ color: 'inherit', padding: '0.25rem 0.5rem' }}
+                                style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
                               >
                                 <i className="fas fa-eye me-1"></i>View Resume
                               </Button>
@@ -437,7 +424,7 @@ const Profile = () => {
                   </div>
                 )}
 
-                {user.role === 'employer' && (
+                {user.role === "employer" && (
                   <div className="mb-4">
                     <h4 className="profile-section-title">Company Information</h4>
                     <Row className="g-4">
@@ -482,7 +469,10 @@ const Profile = () => {
                       </Col>
                       <Col md={6}>
                         <Form.Group>
-                          <Form.Label className="text-muted">Company Logo</Form.Label>
+                          <Form.Label className="text-muted">
+                            Company Logo{' '}
+                            <small className="text-muted opacity-75">(JPG/PNG/GIF · Max 5MB)</small>
+                          </Form.Label>
                           <Form.Control
                             type="file"
                             accept="image/*"
@@ -490,10 +480,14 @@ const Profile = () => {
                             className="file-input-modern"
                             disabled={uploading}
                           />
-                          <Form.Text className="text-muted">Upload an image file (JPG, PNG, GIF - Max 5MB)</Form.Text>
                           {formData.companyLogo && (
                             <div className="mt-2 d-flex align-items-center gap-3">
-                              <Image src={formData.companyLogo} alt="Company Logo" rounded style={{ maxWidth: '120px', maxHeight: '80px' }} />
+                              <Image
+                                src={formData.companyLogo}
+                                alt="Company Logo"
+                                rounded
+                                style={{ maxWidth: "120px", maxHeight: "80px" }}
+                              />
                               <span className="text-muted small">Current logo</span>
                             </div>
                           )}
@@ -524,7 +518,8 @@ const Profile = () => {
 
                 <div className="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-stretch">
                   <div className="text-muted small">
-                    <i className="fas fa-shield-alt me-2"></i>We keep your data secure and never share without permission.
+                    <i className="fas fa-shield-alt me-2"></i>We keep your data secure and never share without
+                    permission.
                   </div>
                   <Button variant="primary" type="submit" size="lg" disabled={loading} className="px-4">
                     {loading ? (
@@ -533,7 +528,7 @@ const Profile = () => {
                         Updating...
                       </>
                     ) : (
-                      'Save Changes'
+                      "Save Changes"
                     )}
                   </Button>
                 </div>
@@ -544,32 +539,21 @@ const Profile = () => {
       </Row>
 
       {/* PDF Viewer Modal */}
-      <Modal 
-        show={showPdfViewer} 
-        onHide={() => setShowPdfViewer(false)} 
-        size="lg"
-        centered
-      >
+      <Modal show={showPdfViewer} onHide={() => setShowPdfViewer(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           {formData.resume && (
-            <div style={{ height: '750px', width: '100%' }}>
+            <div style={{ height: "750px", width: "100%" }}>
               <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer 
-                  fileUrl={formData.resume}
-                  plugins={[defaultLayoutPluginInstance]}
-                />
+                <Viewer fileUrl={formData.resume} plugins={[defaultLayoutPluginInstance]} />
               </Worker>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowPdfViewer(false)}
-          >
+          <Button variant="secondary" onClick={() => setShowPdfViewer(false)}>
             Close
           </Button>
         </Modal.Footer>

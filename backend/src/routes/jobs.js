@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
 
     // Include postedBy information in the jobs listing
     const jobs = await Job.find(query)
-      .populate("postedBy", "_id")
+      .populate("postedBy", "_id company.name company.logo company.location")
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);

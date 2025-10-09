@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
-import { Badge, Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { Worker, Viewer } from "@react-pdf-viewer/core";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 
 const statusVariants = {
   pending: "warning",
@@ -15,6 +19,23 @@ const statusVariants = {
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [selectedResume, setSelectedResume] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingApplication, setEditingApplication] = useState(null);
+  const [editFormData, setEditFormData] = useState({ coverLetter: '', resume: null });
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  // Create default layout plugin with same configuration as Profile viewer
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: () => [],
+    toolbarPlugin: {
+      searchPlugin: {
+        keyword: ''
+      }
+    }
+  });
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -48,6 +69,112 @@ const MyApplications = () => {
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleViewResume = (resumeUrl) => {
+    setSelectedResume(resumeUrl);
+    setShowResumeModal(true);
+  };
+
+  const handleEditApplication = (application) => {
+    setEditingApplication(application);
+    setEditFormData({
+      coverLetter: application.coverLetter,
+      resume: null,
+      currentResumeUrl: application.resume,
+      currentResumeFilename: 'Current Resume'
+    });
+    setShowEditModal(true);
+  };
+
+  const handleResumeUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Please upload a PDF or Word document.');
+      event.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Validate file size (8MB limit)
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('Resume must be 8MB or smaller.');
+      event.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Validate filename
+    if (file.name.length > 100) {
+      toast.error('Filename is too long. Please use a shorter filename.');
+      event.target.value = ''; // Clear the input
+      return;
+    }
+
+    setResumeUploading(true);
+
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      const response = await api.post('/api/upload/document', uploadFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setEditFormData((prev) => ({
+        ...prev,
+        resume: response.data.url,
+        resumeFilename: response.data.filename || file.name
+      }));
+      toast.success('Resume uploaded successfully!');
+    } catch (uploadErr) {
+      toast.error(uploadErr.response?.data?.error || 'Failed to upload resume.');
+    } finally {
+      setResumeUploading(false);
+    }
+  };
+
+  const handleUpdateApplication = async () => {
+    if (!editingApplication) return;
+
+    setUpdating(true);
+    try {
+      const updateData = {
+        coverLetter: editFormData.coverLetter
+      };
+
+      // Only include resume if a new one was uploaded
+      if (editFormData.resume) {
+        updateData.resume = editFormData.resume;
+      }
+
+      const response = await api.put(`/api/applications/update/${editingApplication._id}`, updateData);
+      
+      // Update the applications list
+      setApplications(prev => 
+        prev.map(app => 
+          app._id === editingApplication._id 
+            ? { ...app, ...response.data.application }
+            : app
+        )
+      );
+
+      setShowEditModal(false);
+      toast.success('Application updated successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update application');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -125,9 +252,14 @@ const MyApplications = () => {
                       </Button>
 
                       {application.status === "pending" && (
-                        <Button variant="outline-light" onClick={() => withdrawApplication(application._id)}>
-                          Withdraw Application
-                        </Button>
+                        <>
+                          <Button variant="outline-info" onClick={() => handleEditApplication(application)}>
+                            Edit Application
+                          </Button>
+                          <Button variant="outline-light" onClick={() => withdrawApplication(application._id)}>
+                            Withdraw Application
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -151,14 +283,14 @@ const MyApplications = () => {
                         {application.resume && (
                           <div>
                             <strong>Resume:</strong>{" "}
-                            <a
-                              href={application.resume}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-decoration-none gradient-text"
+                            <Button
+                              variant="link"
+                              className="p-0 text-decoration-none gradient-text"
+                              style={{ fontSize: "0.875rem" }}
+                              onClick={() => handleViewResume(application.resume)}
                             >
                               View Resume
-                            </a>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -205,6 +337,127 @@ const MyApplications = () => {
           ))
         )}
       </Row>
+
+      {/* Resume Preview Modal */}
+      <Modal
+        show={showResumeModal}
+        onHide={() => setShowResumeModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Resume Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {selectedResume && (
+            <div style={{ height: "750px", width: "100%" }}>
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer fileUrl={selectedResume} plugins={[defaultLayoutPluginInstance]} />
+              </Worker>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowResumeModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Edit Application Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" className="edit-modal">
+        <div className="glass-panel border-0 rounded-4">
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="gradient-text fw-bold">Edit Application</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="border-0">
+            <Row className="g-4">
+              <Col lg={12}>
+                <Form.Group>
+                  <Form.Label className="text-muted">Cover Letter</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={6}
+                    value={editFormData.coverLetter}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, coverLetter: e.target.value }))}
+                    placeholder="Update your cover letter..."
+                  />
+                </Form.Group>
+              </Col>
+              <Col lg={12}>
+                <Form.Group>
+                  <Form.Label className="text-muted">
+                    Resume{' '}
+                    <small className="text-muted opacity-75">
+                      (Optional - Upload new resume)
+                    </small>
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleResumeUpload}
+                    className="file-input-modern"
+                    disabled={resumeUploading}
+                  />
+                  {resumeUploading && (
+                    <div className="mt-2 text-muted small">
+                      <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
+                    </div>
+                  )}
+                  {editFormData.resume && !resumeUploading && (
+                    <div className="mt-2 small">
+                      <strong>New resume uploaded:</strong>{' '}
+                      <span className="text-muted me-2">
+                        {editFormData.resumeFilename}
+                      </span>
+                    </div>
+                  )}
+                  {editFormData.currentResumeUrl && !editFormData.resume && (
+                    <div className="mt-2 small">
+                      <strong>Current resume:</strong>{' '}
+                      <Button
+                        variant="link"
+                        className="p-0 text-decoration-none gradient-text"
+                        style={{ fontSize: "0.875rem" }}
+                        onClick={() => handleViewResume(editFormData.currentResumeUrl)}
+                      >
+                        View Current Resume
+                      </Button>
+                    </div>
+                  )}
+                  <small className="text-muted mt-2 d-block">Leave empty to keep current resume</small>
+                </Form.Group>
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <div className="d-flex gap-3 w-100 justify-content-end">
+              <Button 
+                variant="outline-light" 
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 rounded-3"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleUpdateApplication}
+                disabled={updating || resumeUploading}
+                className="px-4 py-2 rounded-3"
+              >
+                {updating ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Application'
+                )}
+              </Button>
+            </div>
+          </Modal.Footer>
+        </div>
+      </Modal>
     </Container>
   );
 };
