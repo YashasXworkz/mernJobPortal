@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { Button, Card, Col, Container, Form, Image, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const initialFormState = {
   name: "",
@@ -108,7 +109,7 @@ const Profile = () => {
         ...prev,
         companyLogo: response.data.url,
       }));
-      toast.success("Company logo uploaded successfully!");
+      toast.success("Company logo uploaded successfully");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to upload image. Please try again.");
     } finally {
@@ -156,7 +157,7 @@ const Profile = () => {
 
       const response = await api.put("/api/auth/profile", updateData);
       setUser(response.data.user);
-      toast.success("Profile updated successfully!");
+      toast.success("Profile updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to update profile");
     } finally {
@@ -165,14 +166,7 @@ const Profile = () => {
   };
 
   if (profileLoading) {
-    return (
-      <Container className="py-5">
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading profile...</div>
-        </div>
-      </Container>
-    );
+    return <LoadingSpinner message="Loading profile..." />;
   }
 
   if (!user) {
@@ -238,7 +232,7 @@ const Profile = () => {
         resume: response.data.url,
         resumeFilename: response.data.filename || file.name,
       }));
-      toast.success("Resume uploaded successfully!");
+      toast.success("Resume uploaded successfully");
     } catch (uploadErr) {
       toast.error(uploadErr.response?.data?.error || "Failed to upload resume.");
     } finally {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
@@ -43,33 +43,33 @@ const Jobs = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const params = {
-          page,
-          limit: 10,
-        };
+  const fetchJobs = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page,
+        limit: 10,
+      };
 
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) {
-            params[key] = value;
-          }
-        });
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          params[key] = value;
+        }
+      });
 
-        const response = await api.get("/api/jobs", { params });
-        setJobs(response.data.jobs);
-        setTotalPages(response.data.totalPages || 1);
-      } catch (err) {
-        toast.error(err.response?.data?.error || "Failed to fetch jobs");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchJobs();
+      const response = await api.get("/api/jobs", { params });
+      setJobs(response.data.jobs);
+      setTotalPages(response.data.totalPages || 1);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to fetch jobs");
+    } finally {
+      setLoading(false);
+    }
   }, [filters, page]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
@@ -119,21 +119,7 @@ const Jobs = () => {
     try {
       await api.delete(`/api/jobs/${jobToDelete._id}`);
       toast.success("Job deleted successfully");
-      // Refresh the jobs list
-      const params = {
-        page,
-        limit: 10,
-      };
-
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          params[key] = value;
-        }
-      });
-
-      const response = await api.get("/api/jobs", { params });
-      setJobs(response.data.jobs);
-      setTotalPages(response.data.totalPages || 1);
+      fetchJobs();
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to delete job");
     } finally {

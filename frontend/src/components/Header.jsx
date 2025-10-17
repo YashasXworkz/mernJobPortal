@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Container, Dropdown, Nav, Navbar, NavDropdown, Spinner } from "react-bootstrap";
 
 const Header = () => {
+  const [showNotifications, setShowNotifications] = useState(false);
   const {
     user,
     logout,
@@ -23,6 +25,8 @@ const Header = () => {
     if (!notification.isRead) {
       markNotificationRead(notification._id);
     }
+
+    setShowNotifications(false);
 
     if (notification.metadata?.jobId) {
       navigate(`/my-applications?job=${notification.metadata.jobId}`);
@@ -83,13 +87,19 @@ const Header = () => {
           <Nav className="d-flex align-items-center gap-3">
             {user ? (
               <>
-                <Dropdown align="end" className="notification-dropdown">
+                <Dropdown 
+                  align="end" 
+                  className="notification-dropdown"
+                  show={showNotifications}
+                  onToggle={(show) => setShowNotifications(show)}
+                >
                   <Dropdown.Toggle
                     as={Button}
                     variant="outline-light"
                     className="notification-btn rounded-circle d-flex align-items-center justify-content-center position-relative"
+                    aria-label={`Notifications${unreadNotificationCount > 0 ? `, ${unreadNotificationCount} unread` : ''}`}
                   >
-                    <i className="fas fa-bell"></i>
+                    <i className="fas fa-bell" aria-hidden="true"></i>
                     {unreadNotificationCount > 0 && (
                       <Badge bg="danger" pill className="notification-badge">
                         {unreadNotificationCount}

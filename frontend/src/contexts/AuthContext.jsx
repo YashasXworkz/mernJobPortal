@@ -120,12 +120,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user?._id) {
       fetchNotifications();
     } else {
       setNotifications([]);
     }
-  }, [user, fetchNotifications]);
+  }, [user?._id, fetchNotifications]);
 
   const unreadNotificationCount = useMemo(
     () => notifications.filter((notification) => !notification.isRead).length,

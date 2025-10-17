@@ -5,6 +5,7 @@ import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -100,7 +101,7 @@ const JobDetails = () => {
       const response = await api.post(`/api/applications/${id}`, applicationData);
       setShowApplicationForm(false);
       setApplicationData({ coverLetter: "", resume: "" });
-      toast.success(response.data.message || "Application submitted successfully!");
+      toast.success(response.data.message || "Application submitted successfully");
 
       // Refresh job details to show updated applicants count
       const jobResponse = await api.get(`/api/jobs/${id}`);
@@ -134,21 +135,13 @@ const JobDetails = () => {
       }
       setCurrentResumeUrl(resumeUrl);
       setShowPdfViewer(true);
-      toast.success("Loading resume preview...");
     } catch (error) {
       toast.error("Failed to open resume viewer");
     }
   };
 
   if (loading) {
-    return (
-      <Container className="py-5">
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading job details...</div>
-        </div>
-      </Container>
-    );
+    return <LoadingSpinner message="Loading job details..." />;
   }
 
   if (fetchError) {
@@ -250,19 +243,23 @@ const JobDetails = () => {
               <h5 className="mb-3">Job Details</h5>
               <div className="glass-panel p-3 border-0" style={{ backdropFilter: "blur(20px)", boxShadow: "none" }}>
                 <div className="mb-2 job-detail-item">
-                  <strong>Location:</strong> 📍 {job.location}
+                  <i className="fas fa-map-marker-alt me-2"></i>
+                  <strong>Location:</strong> {job.location}
                 </div>
                 <div className="mb-2 job-detail-item">
-                  <strong>Type:</strong> 💼 {job.type}
+                  <i className="fas fa-briefcase me-2"></i>
+                  <strong>Type:</strong> {job.type}
                 </div>
                 {job.experience && (
                   <div className="mb-2 job-detail-item">
-                    <strong>Experience:</strong> 📊 {job.experience} level
+                    <i className="fas fa-chart-line me-2"></i>
+                    <strong>Experience:</strong> {job.experience} level
                   </div>
                 )}
                 {job.salary && (job.salary.min != null || job.salary.max != null) && (
                   <div className="mb-2 job-detail-item">
-                    <strong>Salary:</strong> 💰
+                    <i className="fas fa-rupee-sign me-2"></i>
+                    <strong>Salary:</strong>
                     {job.salary.min != null && job.salary.max != null
                       ? ` ₹${job.salary.min.toLocaleString()} - ₹${job.salary.max.toLocaleString()}`
                       : job.salary.min != null
@@ -446,7 +443,7 @@ const JobDetails = () => {
           <Button variant="outline-light" onClick={() => setShowDeleteModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleDeleteJob}>
+          <Button variant="danger" onClick={handleDeleteJob}>
             Delete Job
           </Button>
         </Modal.Footer>

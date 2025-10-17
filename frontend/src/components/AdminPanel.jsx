@@ -4,6 +4,7 @@ import api, { adminApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Modal, Row, Spinner, Table } from "react-bootstrap";
 import { toast } from "react-toastify";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ const AdminPanel = () => {
         totalJobseekers: updatedUsers.filter((u) => u.role === "jobseeker").length,
         totalEmployers: updatedUsers.filter((u) => u.role === "employer").length,
       }));
+      toast.success("User deleted successfully");
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (err) {
@@ -101,14 +103,7 @@ const AdminPanel = () => {
   }
 
   if (loading) {
-    return (
-      <Container className="py-5">
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading admin dashboard...</div>
-        </div>
-      </Container>
-    );
+    return <LoadingSpinner message="Loading admin dashboard..." />;
   }
 
   return (

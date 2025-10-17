@@ -4,6 +4,7 @@ import { Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstra
 import { toast } from "react-toastify";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const EditJob = () => {
   const { id } = useParams();
@@ -124,14 +125,7 @@ const EditJob = () => {
   };
 
   if (loading) {
-    return (
-      <Container className="py-5">
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading job details...</div>
-        </div>
-      </Container>
-    );
+    return <LoadingSpinner message="Loading job details..." />;
   }
 
   if (fetchError) {

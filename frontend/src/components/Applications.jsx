@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const Applications = () => {
   const navigate = useNavigate();
@@ -52,7 +53,6 @@ const Applications = () => {
   const fetchApplications = async () => {
     try {
       if (!selectedJob) {
-        toast.error("Please select a job before applying filters.");
         return;
       }
 
@@ -154,14 +154,11 @@ const Applications = () => {
   };
 
   if (!user) {
-    return (
-      <Container className="py-5">
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading...</div>
-        </div>
-      </Container>
-    );
+    return <LoadingSpinner />;
+  }
+
+  if (loading) {
+    return <LoadingSpinner />;
   }
 
   return (

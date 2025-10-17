@@ -82,18 +82,38 @@ const Footer = () => {
           <Col md={2}>
             <h6 className="text-secondary mb-3">Connect</h6>
             <div className="d-flex gap-3">
-              <a href="#" className="text-muted footer-social-link" aria-label="LinkedIn">
+              <button 
+                className="text-muted footer-social-link border-0 bg-transparent" 
+                disabled
+                aria-label="LinkedIn (Coming Soon)"
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              >
                 <i className="fab fa-linkedin-in"></i>
-              </a>
-              <a href="#" className="text-muted footer-social-link" aria-label="Twitter">
+              </button>
+              <button 
+                className="text-muted footer-social-link border-0 bg-transparent" 
+                disabled
+                aria-label="Twitter (Coming Soon)"
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              >
                 <i className="fab fa-twitter"></i>
-              </a>
-              <a href="#" className="text-muted footer-social-link" aria-label="Facebook">
+              </button>
+              <button 
+                className="text-muted footer-social-link border-0 bg-transparent" 
+                disabled
+                aria-label="Facebook (Coming Soon)"
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              >
                 <i className="fab fa-facebook-f"></i>
-              </a>
-              <a href="#" className="text-muted footer-social-link" aria-label="Instagram">
+              </button>
+              <button 
+                className="text-muted footer-social-link border-0 bg-transparent" 
+                disabled
+                aria-label="Instagram (Coming Soon)"
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              >
                 <i className="fab fa-instagram"></i>
-              </a>
+              </button>
             </div>
           </Col>
         </Row>

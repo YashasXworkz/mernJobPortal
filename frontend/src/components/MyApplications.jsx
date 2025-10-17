@@ -4,6 +4,7 @@ import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const statusVariants = {
   pending: "warning",
@@ -122,7 +123,7 @@ const MyApplications = () => {
         resume: response.data.url,
         resumeFilename: response.data.filename || file.name
       }));
-      toast.success('Resume uploaded successfully!');
+      toast.success('Resume uploaded successfully');
     } catch (uploadErr) {
       toast.error(uploadErr.response?.data?.error || 'Failed to upload resume.');
     } finally {
@@ -156,7 +157,7 @@ const MyApplications = () => {
       );
 
       setShowEditModal(false);
-      toast.success('Application updated successfully!');
+      toast.success('Application updated successfully');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to update application');
     } finally {
@@ -173,12 +174,7 @@ const MyApplications = () => {
         </Badge>
       </div>
 
-      {loading && (
-        <div className="d-flex flex-column align-items-center justify-content-center py-5">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading applications...</div>
-        </div>
-      )}
+      {loading && <LoadingSpinner message="Loading applications..." />}
 
       <Row className="g-4">
         {applications.length === 0 && !loading ? (
@@ -271,12 +267,13 @@ const MyApplications = () => {
                           <div>
                             <strong>Resume:</strong>{" "}
                             <Button
-                              variant="link"
-                              className="p-0 text-decoration-none gradient-text"
-                              style={{ fontSize: "0.875rem" }}
+                              variant="outline-light"
+                              size="sm"
                               onClick={() => handleViewResume(application.resume)}
+                              className="text-muted border-0 bg-transparent"
+                              style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
                             >
-                              View Resume
+                              <i className="fas fa-eye me-1"></i>View Resume
                             </Button>
                           </div>
                         )}
