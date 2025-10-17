@@ -206,29 +206,6 @@ const Profile = () => {
     );
   }
 
-  const handleDownloadResume = async (url, filename) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      // Create a temporary URL for the blob
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      // Create a temporary anchor element for download
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename || "resume.pdf";
-      document.body.appendChild(link);
-      link.click();
-
-      // Clean up
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      toast.error("Failed to download resume");
-    }
-  };
-
   const handleResumeUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
