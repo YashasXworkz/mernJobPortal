@@ -73,9 +73,4 @@ const jobSchema = new mongoose.Schema(
 // Simple text search index
 jobSchema.index({ title: "text", description: "text", company: "text" });
 
-// Virtual for applicant count
-jobSchema.virtual("applicantCount").get(function () {
-  return this.applicants ? this.applicants.length : 0;
-});
-
 module.exports = mongoose.model("Job", jobSchema);

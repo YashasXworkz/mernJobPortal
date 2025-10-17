@@ -62,19 +62,19 @@ const Footer = () => {
             <h6 className="text-secondary mb-3">Company</h6>
             <ul className="list-unstyled">
               <li className="mb-2">
-                <Link to="/about" className="text-muted text-decoration-none small footer-link">
+                <a href="/" className="text-muted text-decoration-none small footer-link">
                   About Us
-                </Link>
+                </a>
               </li>
               <li className="mb-2">
-                <Link to="/contact" className="text-muted text-decoration-none small footer-link">
+                <a href="mailto:support@jobportal.com" className="text-muted text-decoration-none small footer-link">
                   Contact
-                </Link>
+                </a>
               </li>
               <li className="mb-2">
-                <Link to="/privacy" className="text-muted text-decoration-none small footer-link">
+                <a href="/" className="text-muted text-decoration-none small footer-link">
                   Privacy Policy
-                </Link>
+                </a>
               </li>
             </ul>
           </Col>
