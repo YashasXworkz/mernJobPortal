@@ -47,9 +47,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for unique email lookup
-userSchema.index({ email: 1 });
-
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 

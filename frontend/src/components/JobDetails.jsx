@@ -4,6 +4,10 @@ import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -20,6 +24,18 @@ const JobDetails = () => {
   const [resumeUploading, setResumeUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [currentResumeUrl, setCurrentResumeUrl] = useState("");
+
+  // Create PDF viewer plugin
+  const defaultLayoutPluginInstance = defaultLayoutPlugin({
+    sidebarTabs: (defaultTabs) => [],
+    toolbarPlugin: {
+      searchPlugin: {
+        keyword: ''
+      }
+    }
+  });
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -120,6 +136,20 @@ const JobDetails = () => {
       navigate("/jobs");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to delete job");
+    }
+  };
+
+  const handleViewResume = (resumeUrl) => {
+    try {
+      if (!resumeUrl) {
+        toast.error("Resume URL is not available");
+        return;
+      }
+      setCurrentResumeUrl(resumeUrl);
+      setShowPdfViewer(true);
+      toast.success("Loading resume preview...");
+    } catch (error) {
+      toast.error("Failed to open resume viewer");
     }
   };
 
@@ -374,7 +404,9 @@ const JobDetails = () => {
               </Form.Group>
 
               <Form.Group className="mb-4">
-                <Form.Label className="text-muted">Resume</Form.Label>
+                <Form.Label className="text-muted">
+                  Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small>
+                </Form.Label>
                 <Form.Control
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -383,7 +415,6 @@ const JobDetails = () => {
                   disabled={resumeUploading}
                   required={!applicationData.resume}
                 />
-                <Form.Text className="text-muted">Upload a PDF or Word document (max 8MB)</Form.Text>
                 {resumeUploading && (
                   <div className="mt-2 text-muted small">
                     <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
@@ -392,14 +423,15 @@ const JobDetails = () => {
                 {applicationData.resume && !resumeUploading && (
                   <div className="mt-2 small">
                     <strong>Uploaded:</strong>{" "}
-                    <a
-                      href={applicationData.resume}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-decoration-none gradient-text"
+                    <Button
+                      variant="outline-light"
+                      size="sm"
+                      onClick={() => handleViewResume(applicationData.resume)}
+                      className="text-muted border-0 bg-transparent"
+                      style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
                     >
-                      View Resume
-                    </a>
+                      <i className="fas fa-eye me-1"></i>View Resume
+                    </Button>
                   </div>
                 )}
               </Form.Group>
@@ -429,6 +461,48 @@ const JobDetails = () => {
           </Button>
           <Button variant="primary" onClick={handleDeleteJob}>
             Delete Job
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* PDF Viewer Modal */}
+      <Modal 
+        show={showPdfViewer} 
+        onHide={() => setShowPdfViewer(false)} 
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Resume Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          {currentResumeUrl && (
+            <div style={{ height: '750px', width: '100%' }}>
+              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer 
+                  fileUrl={currentResumeUrl}
+                  plugins={[defaultLayoutPluginInstance]}
+                  onDocumentLoad={() => toast.dismiss()}
+                  renderError={(error) => {
+                    toast.error("Failed to load PDF. Please try again.");
+                    return (
+                      <div className="text-center p-5">
+                        <p className="text-danger">Failed to load PDF</p>
+                        <p className="text-muted small">{error.message}</p>
+                      </div>
+                    );
+                  }}
+                />
+              </Worker>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowPdfViewer(false)}
+          >
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
