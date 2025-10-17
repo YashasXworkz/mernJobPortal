@@ -4,10 +4,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Worker, Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import PDFViewer from "./shared/PDFViewer.jsx";
 
 const Applications = () => {
   const navigate = useNavigate();
@@ -29,16 +26,6 @@ const Applications = () => {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [currentResumeUrl, setCurrentResumeUrl] = useState("");
   const [currentApplicantName, setCurrentApplicantName] = useState("");
-
-  // Create PDF viewer plugin
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [],
-    toolbarPlugin: {
-      searchPlugin: {
-        keyword: ''
-      }
-    }
-  });
 
   useEffect(() => {
     fetchJobs();
@@ -617,16 +604,7 @@ const Applications = () => {
           <Modal.Title>{currentApplicantName}'s Resume</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          {currentResumeUrl && (
-            <div style={{ height: '750px', width: '100%' }}>
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer 
-                  fileUrl={currentResumeUrl}
-                  plugins={[defaultLayoutPluginInstance]}
-                />
-              </Worker>
-            </div>
-          )}
+          {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
         </Modal.Body>
         <Modal.Footer>
           <Button 

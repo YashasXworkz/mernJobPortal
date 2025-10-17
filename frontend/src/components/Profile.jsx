@@ -3,10 +3,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Button, Card, Col, Container, Form, Image, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Worker, Viewer } from "@react-pdf-viewer/core";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+import PDFViewer from "./shared/PDFViewer.jsx";
 
 const initialFormState = {
   name: "",
@@ -33,19 +30,6 @@ const Profile = () => {
   const [resumeUploading, setResumeUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
-
-  // Create default layout plugin with zoom and download
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
-      // Remove sidebar tabs to keep it clean
-    ],
-    toolbarPlugin: {
-      // Show only essential toolbar items
-      searchPlugin: {
-        keyword: "",
-      },
-    },
-  });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -521,13 +505,7 @@ const Profile = () => {
           <Modal.Title>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          {formData.resume && (
-            <div style={{ height: "750px", width: "100%" }}>
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer fileUrl={formData.resume} plugins={[defaultLayoutPluginInstance]} />
-              </Worker>
-            </div>
-          )}
+          {formData.resume && <PDFViewer fileUrl={formData.resume} />}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowPdfViewer(false)}>

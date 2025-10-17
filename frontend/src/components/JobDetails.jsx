@@ -4,10 +4,7 @@ import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Worker, Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import PDFViewer from "./shared/PDFViewer.jsx";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -26,16 +23,6 @@ const JobDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [currentResumeUrl, setCurrentResumeUrl] = useState("");
-
-  // Create PDF viewer plugin
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [],
-    toolbarPlugin: {
-      searchPlugin: {
-        keyword: ''
-      }
-    }
-  });
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -476,26 +463,7 @@ const JobDetails = () => {
           <Modal.Title>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          {currentResumeUrl && (
-            <div style={{ height: '750px', width: '100%' }}>
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer 
-                  fileUrl={currentResumeUrl}
-                  plugins={[defaultLayoutPluginInstance]}
-                  onDocumentLoad={() => toast.dismiss()}
-                  renderError={(error) => {
-                    toast.error("Failed to load PDF. Please try again.");
-                    return (
-                      <div className="text-center p-5">
-                        <p className="text-danger">Failed to load PDF</p>
-                        <p className="text-muted small">{error.message}</p>
-                      </div>
-                    );
-                  }}
-                />
-              </Worker>
-            </div>
-          )}
+          {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
         </Modal.Body>
         <Modal.Footer>
           <Button 

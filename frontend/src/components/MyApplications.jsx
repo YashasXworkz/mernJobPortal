@@ -3,10 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Worker, Viewer } from "@react-pdf-viewer/core";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+import PDFViewer from "./shared/PDFViewer.jsx";
 
 const statusVariants = {
   pending: "warning",
@@ -26,16 +23,6 @@ const MyApplications = () => {
   const [editFormData, setEditFormData] = useState({ coverLetter: '', resume: null });
   const [resumeUploading, setResumeUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
-
-  // Create default layout plugin with same configuration as Profile viewer
-  const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: () => [],
-    toolbarPlugin: {
-      searchPlugin: {
-        keyword: ''
-      }
-    }
-  });
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -349,13 +336,7 @@ const MyApplications = () => {
           <Modal.Title>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          {selectedResume && (
-            <div style={{ height: "750px", width: "100%" }}>
-              <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-                <Viewer fileUrl={selectedResume} plugins={[defaultLayoutPluginInstance]} />
-              </Worker>
-            </div>
-          )}
+          {selectedResume && <PDFViewer fileUrl={selectedResume} />}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowResumeModal(false)}>

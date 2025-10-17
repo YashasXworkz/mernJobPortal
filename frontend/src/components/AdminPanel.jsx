@@ -92,12 +92,6 @@ const AdminPanel = () => {
     return <Badge bg={variants[role] || "secondary"}>{role}</Badge>;
   };
 
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      toast.error("Access Denied. Admin privileges required.");
-    }
-  }, [user]);
-
   if (!user || user.role !== 'admin') {
     return (
       <Container className="py-5">
