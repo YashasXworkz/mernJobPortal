@@ -63,4 +63,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
+// Performance index for admin dashboard queries
+userSchema.index({ role: 1 }); // Count users by role
+
 module.exports = mongoose.model('User', userSchema);

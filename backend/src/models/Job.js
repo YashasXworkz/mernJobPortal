@@ -73,4 +73,11 @@ const jobSchema = new mongoose.Schema(
 // Simple text search index
 jobSchema.index({ title: "text", description: "text", company: "text" });
 
+// Performance indexes for common queries
+jobSchema.index({ status: 1, createdAt: -1 }); // Active jobs listing (most common query)
+jobSchema.index({ location: 1, type: 1 }); // Filter by location and type
+jobSchema.index({ skills: 1 }); // Skills-based search
+jobSchema.index({ postedBy: 1, status: 1 }); // Employer's jobs
+jobSchema.index({ "salary.min": 1, "salary.max": 1 }); // Salary range queries
+
 module.exports = mongoose.model("Job", jobSchema);

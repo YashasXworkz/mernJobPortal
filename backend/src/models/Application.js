@@ -40,6 +40,12 @@ const applicationSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Compound unique index to prevent duplicate applications
 applicationSchema.index({ job: 1, applicant: 1 }, { unique: true });
+
+// Performance indexes for common queries
+applicationSchema.index({ status: 1 }); // Filter by application status
+applicationSchema.index({ applicant: 1, appliedAt: -1 }); // User's applications timeline
+applicationSchema.index({ job: 1, status: 1 }); // Job's applications by status
 
 module.exports = mongoose.model('Application', applicationSchema);
