@@ -658,6 +658,12 @@ textarea::placeholder {
   border: 1px solid rgba(148, 163, 184, 0.15);
 }
 
+/* Glass panel variant with enhanced blur and no shadow - used for nested content */
+.glass-panel-content {
+  backdrop-filter: blur(16px);
+  box-shadow: none;
+}
+
 .dashboard-table {
   border-radius: 1.2rem;
   overflow: hidden;

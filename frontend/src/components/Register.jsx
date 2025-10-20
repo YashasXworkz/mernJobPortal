@@ -107,8 +107,13 @@ const Register = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
+                    pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                    title="Please enter a valid email address (e.g., user@example.com)"
                     required
                   />
+                  <Form.Text className="text-muted small">
+                    Must be a valid email address with proper domain
+                  </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-3">

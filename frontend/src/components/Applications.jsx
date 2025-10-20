@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 import { formatDate, getStatusBadge } from "../lib/utils.js";
+import { APPLICATION_STATUSES } from "../constants/applicationStatuses.js";
 
 const Applications = () => {
   const { user } = useAuth();
@@ -266,12 +267,11 @@ const Applications = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   disabled={!selectedJob}
                 >
-                  <option value="">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="reviewed">Reviewed</option>
-                  <option value="shortlisted">Shortlisted</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="accepted">Accepted</option>
+                  {APPLICATION_STATUSES.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
                 </Form.Select>
               </Form.Group>
             </Col>
@@ -547,11 +547,11 @@ const Applications = () => {
               required
             >
               <option value="">Select Status</option>
-              <option value="pending">Pending</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="shortlisted">Shortlisted</option>
-              <option value="rejected">Rejected</option>
-              <option value="accepted">Accepted</option>
+              {APPLICATION_STATUSES.filter(s => s.value !== '').map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
             </Form.Select>
             <Form.Text className="text-muted small">
               Required field - please select a status to continue

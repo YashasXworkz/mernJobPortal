@@ -9,6 +9,25 @@ const router = express.Router();
 // Cloudinary is configured globally in server.js
 const storage = multer.memoryStorage();
 
+/**
+ * Helper function to upload file buffer to Cloudinary
+ * @param {Buffer} fileBuffer - File buffer from multer
+ * @param {Object} options - Cloudinary upload options
+ * @returns {Promise<Object>} Cloudinary upload result
+ */
+const uploadToCloudinary = async (fileBuffer, options) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
 const imageUpload = multer({
   storage,
   limits: {
@@ -49,19 +68,9 @@ router.post('/image', auth, imageUpload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'jobportal',
-          resource_type: 'image'
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-
-      uploadStream.end(req.file.buffer);
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'jobportal',
+      resource_type: 'image'
     });
 
     res.json({
@@ -80,22 +89,12 @@ router.post('/document', auth, documentUpload.single('file'), async (req, res) =
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'jobportal/resumes',
-          resource_type: 'raw',
-          use_filename: true,
-          unique_filename: false,
-          public_id: `${req.file.originalname.replace(/\.[^/.]+$/, "")}_${Date.now()}`
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-
-      uploadStream.end(req.file.buffer);
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'jobportal/resumes',
+      resource_type: 'raw',
+      use_filename: true,
+      unique_filename: false,
+      public_id: `${req.file.originalname.replace(/\.[^/.]+$/, "")}_${Date.now()}`
     });
 
     // Use Cloudinary's fl_attachment parameter to set the download filename
