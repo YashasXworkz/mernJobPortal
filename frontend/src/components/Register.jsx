@@ -74,7 +74,7 @@ const Register = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Full Name</Form.Label>
+                      <Form.Label className="text-muted">Full Name <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
                         name="name"
@@ -100,7 +100,7 @@ const Register = () => {
                 </Row>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Email Address</Form.Label>
+                  <Form.Label className="text-muted">Email Address <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
@@ -112,7 +112,7 @@ const Register = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">I am a</Form.Label>
+                  <Form.Label className="text-muted">I am a <span className="text-danger">*</span></Form.Label>
                   <Form.Select
                     name="role"
                     value={formData.role}
@@ -127,7 +127,7 @@ const Register = () => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Password</Form.Label>
+                      <Form.Label className="text-muted">Password <span className="text-danger">*</span></Form.Label>
                       <div className="position-relative">
                         <Form.Control
                           type={showPassword ? 'text' : 'password'}
@@ -151,7 +151,7 @@ const Register = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Confirm Password</Form.Label>
+                      <Form.Label className="text-muted">Confirm Password <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type={showPassword ? 'text' : 'password'}
                         name="confirmPassword"
@@ -169,7 +169,7 @@ const Register = () => {
                     variant="primary"
                     type="submit"
                     size="lg"
-                    disabled={loading}
+                    disabled={loading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword}
                   >
                     {loading ? (
                       <>

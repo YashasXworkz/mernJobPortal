@@ -44,6 +44,23 @@ const PostJob = () => {
     }));
   };
 
+  const handleSalaryChange = (event) => {
+    const { name, value } = event.target;
+    // Remove commas and keep only numbers
+    const numericValue = value.replace(/,/g, '');
+    if (numericValue === '' || /^\d+$/.test(numericValue)) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: numericValue,
+      }));
+    }
+  };
+
+  const formatSalary = (value) => {
+    if (!value) return '';
+    return parseInt(value).toLocaleString('en-IN');
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
@@ -107,7 +124,7 @@ const PostJob = () => {
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Job Title *</Form.Label>
+                      <Form.Label className="text-muted">Job Title <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
                         name="title"
@@ -120,7 +137,7 @@ const PostJob = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Company *</Form.Label>
+                      <Form.Label className="text-muted">Company <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
                         name="company"
@@ -141,7 +158,7 @@ const PostJob = () => {
                 <Row className="g-3">
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Location *</Form.Label>
+                      <Form.Label className="text-muted">Location <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
                         name="location"
@@ -154,7 +171,7 @@ const PostJob = () => {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Job Type *</Form.Label>
+                      <Form.Label className="text-muted">Job Type <span className="text-danger">*</span></Form.Label>
                       <Form.Select name="type" value={formData.type} onChange={handleChange} required>
                         <option value="full-time">Full Time</option>
                         <option value="part-time">Part Time</option>
@@ -167,67 +184,73 @@ const PostJob = () => {
                 </Row>
 
                 <Row className="g-3">
-                  <Col md={6}>
+                  <Col md={4}>
                     <Form.Group className="mb-3">
                       <Form.Label className="text-muted">Min Salary (INR)</Form.Label>
                       <Form.Control
-                        type="number"
+                        type="text"
                         name="salaryMin"
-                        value={formData.salaryMin}
+                        value={formatSalary(formData.salaryMin)}
+                        onChange={handleSalaryChange}
+                        placeholder="20,000"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Max Salary (INR)</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="salaryMax"
+                        value={formatSalary(formData.salaryMax)}
+                        onChange={handleSalaryChange}
+                        placeholder="4,00,000"
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Experience Level</Form.Label>
+                      <Form.Select name="experience" value={formData.experience} onChange={handleChange}>
+                        <option value="">Select experience level</option>
+                        <option value="entry">Entry Level</option>
+                        <option value="mid">Mid Level</option>
+                        <option value="senior">Senior Level</option>
+                        <option value="lead">Lead</option>
+                        <option value="executive">Executive</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="text-muted">Skills (comma-separated)</Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="skills"
+                        value={formData.skills}
                         onChange={handleChange}
-                        placeholder="50000"
+                        placeholder="JavaScript, React, Node.js, etc."
                       />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="text-muted">Max Salary (INR)</Form.Label>
+                      <Form.Label className="text-muted">Application Deadline</Form.Label>
                       <Form.Control
-                        type="number"
-                        name="salaryMax"
-                        value={formData.salaryMax}
+                        type="date"
+                        name="applicationDeadline"
+                        value={formData.applicationDeadline}
                         onChange={handleChange}
-                        placeholder="100000"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Experience Level</Form.Label>
-                  <Form.Select name="experience" value={formData.experience} onChange={handleChange}>
-                    <option value="">Select experience level</option>
-                    <option value="entry">Entry Level</option>
-                    <option value="mid">Mid Level</option>
-                    <option value="senior">Senior Level</option>
-                    <option value="lead">Lead</option>
-                    <option value="executive">Executive</option>
-                  </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Skills (comma-separated)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="skills"
-                    value={formData.skills}
-                    onChange={handleChange}
-                    placeholder="JavaScript, React, Node.js, etc."
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Application Deadline</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="applicationDeadline"
-                    value={formData.applicationDeadline}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Job Description *</Form.Label>
+                  <Form.Label className="text-muted">Job Description <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={6}
@@ -240,7 +263,7 @@ const PostJob = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Requirements *</Form.Label>
+                  <Form.Label className="text-muted">Requirements <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={6}
@@ -265,7 +288,7 @@ const PostJob = () => {
                 </Form.Group>
 
                 <div className="d-grid mt-4">
-                  <Button variant="primary" type="submit" size="lg" disabled={loading}>
+                  <Button variant="primary" type="submit" size="lg" disabled={loading || !formData.title || !formData.company || !formData.location || !formData.description || !formData.requirements}>
                     {loading ? (
                       <>
                         <Spinner animation="border" size="sm" className="me-2" />

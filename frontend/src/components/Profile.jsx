@@ -219,7 +219,7 @@ const Profile = () => {
                   <Row className="g-4">
                     <Col md={6}>
                       <Form.Group>
-                        <Form.Label className="text-muted">Full Name *</Form.Label>
+                        <Form.Label className="text-muted">Full Name <span className="text-danger">*</span></Form.Label>
                         <Form.Control
                           type="text"
                           name="name"
@@ -434,7 +434,7 @@ const Profile = () => {
                     <i className="fas fa-shield-alt me-2"></i>We keep your data secure and never share without
                     permission.
                   </div>
-                  <Button variant="primary" type="submit" size="lg" disabled={loading} className="px-4">
+                  <Button variant="primary" type="submit" size="lg" disabled={loading || !formData.name} className="px-4">
                     {loading ? (
                       <>
                         <Spinner animation="border" size="sm" className="me-2" />

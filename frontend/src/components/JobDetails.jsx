@@ -390,7 +390,7 @@ const JobDetails = () => {
             <h4 className="mb-4 gradient-text">Apply for this position</h4>
             <Form onSubmit={handleApply}>
               <Form.Group className="mb-3">
-                <Form.Label className="text-muted">Cover Letter</Form.Label>
+                <Form.Label className="text-muted">Cover Letter <span className="text-danger">*</span></Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={6}
@@ -404,7 +404,7 @@ const JobDetails = () => {
 
               <Form.Group className="mb-4">
                 <Form.Label className="text-muted">
-                  Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small>
+                  Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small> <span className="text-danger">*</span>
                 </Form.Label>
                 
                 {user?.profile?.resume && !userWantsCustomResume ? (
@@ -487,7 +487,7 @@ const JobDetails = () => {
               </Form.Group>
 
               <div className="d-flex gap-3">
-                <Button variant="primary" type="submit" disabled={submitting}>
+                <Button variant="primary" type="submit" disabled={submitting || !applicationData.coverLetter || !applicationData.resume}>
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
                 <Button variant="outline-light" type="button" onClick={handleCancelApplication}>

@@ -52,7 +52,7 @@ const Login = () => {
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Email Address</Form.Label>
+                  <Form.Label className="text-muted">Email Address <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
@@ -64,7 +64,7 @@ const Login = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-4">
-                  <Form.Label className="text-muted">Password</Form.Label>
+                  <Form.Label className="text-muted">Password <span className="text-danger">*</span></Form.Label>
                   <div className="position-relative">
                     <Form.Control
                       type={showPassword ? 'text' : 'password'}
@@ -90,7 +90,7 @@ const Login = () => {
                     variant="primary"
                     type="submit"
                     size="lg"
-                    disabled={loading}
+                    disabled={loading || !formData.email || !formData.password}
                   >
                     {loading ? (
                       <>
