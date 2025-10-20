@@ -900,3 +900,32 @@ textarea::placeholder {
   color: var(--color-text-secondary) !important;
   transform: translateY(-2px);
 }
+
+/* Modal close button visibility fix */
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.modal-header .btn-close:focus {
+  box-shadow: 0 0 0 0.25rem rgba(159, 116, 255, 0.25);
+  opacity: 1;
+}
+
+/* Close button for white background modals (PDF viewer) */
+.modal-content.bg-white .modal-header .btn-close {
+  filter: none;
+  opacity: 0.6;
+  background-color: transparent;
+}
+
+.modal-content.bg-white .modal-header .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}

@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api, { adminApi } from "../lib/api";
+import { adminApi } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Badge, Button, Card, Col, Container, Modal, Row, Spinner, Table } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { Badge, Button, Card, Col, Container, Modal, Row, Table } from "react-bootstrap";
+import toast from "react-hot-toast";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
+import { formatDate } from "../lib/utils.js";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [jobs, setJobs] = useState([]);
-  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -37,17 +37,15 @@ const AdminPanel = () => {
     try {
       setLoading(true);
 
-      const [statsResponse, usersResponse, applicationsResponse] = await Promise.all([
+      const [statsResponse, usersResponse] = await Promise.all([
         adminApi.get("/stats"),
         adminApi.get("/users"),
-        adminApi.get("/applications"),
       ]);
 
       const { stats: adminStats, recentJobs } = statsResponse.data;
       setStats(adminStats);
       setJobs(recentJobs || []);
       setUsers(usersResponse.data.users || []);
-      setApplications(applicationsResponse.data.applications || []);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to fetch dashboard data.");
     } finally {
@@ -81,10 +79,6 @@ const AdminPanel = () => {
     setShowDeleteModal(true);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   const getRoleBadge = (role) => {
     const variants = {
       jobseeker: "info",
@@ -94,7 +88,7 @@ const AdminPanel = () => {
     return <Badge bg={variants[role] || "secondary"}>{role}</Badge>;
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== "admin") {
     return (
       <Container className="py-5">
         <div className="text-center text-danger fw-semibold">Access Denied. Admin privileges required.</div>
@@ -308,29 +302,51 @@ const AdminPanel = () => {
       </Card>
 
       {/* Delete User Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} className="glass-panel">
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="gradient-text">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            Confirm Delete
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
-            Are you sure you want to delete user <strong>{userToDelete?.name}</strong>?
-          </p>
-          <p className="text-muted small">This action cannot be undone and will remove all associated data.</p>
-        </Modal.Body>
-        <Modal.Footer className="border-0">
-          <Button variant="outline-light" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDeleteUser}>
-            <i className="fas fa-trash me-2"></i>
-            Delete User
-          </Button>
-        </Modal.Footer>
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} size="sm" className="delete-modal">
+        <div className="glass-panel border-0 rounded-4 delete-modal-content">
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="gradient-text fw-bold">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Confirm Delete
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="border-0">
+            <p>
+              Are you sure you want to delete user <strong>{userToDelete?.name}</strong>?
+            </p>
+            <p className="text-muted small">This action cannot be undone and will remove all associated data.</p>
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <div className="d-flex gap-3 w-100 justify-content-end">
+              <Button 
+                variant="outline-light" 
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-3"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleDeleteUser}
+                className="px-4 py-2 rounded-3"
+              >
+                <i className="fas fa-trash me-2"></i>
+                Delete User
+              </Button>
+            </div>
+          </Modal.Footer>
+        </div>
       </Modal>
+      <style>{`
+        .delete-modal-content {
+          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .delete-modal .modal-dialog:hover .delete-modal-content {
+          transform: translateY(-6px);
+          border-color: rgba(159, 116, 255, 0.55) !important;
+          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+        }
+      `}</style>
     </Container>
   );
 };

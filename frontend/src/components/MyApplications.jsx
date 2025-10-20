@@ -2,17 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
-
-const statusVariants = {
-  pending: "warning",
-  reviewed: "info",
-  shortlisted: "success",
-  rejected: "danger",
-  accepted: "primary",
-};
+import { useResumeUpload } from "../hooks/useResumeUpload.js";
+import { formatDate, getStatusBadge } from "../lib/utils.js";
 
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
@@ -22,8 +16,8 @@ const MyApplications = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingApplication, setEditingApplication] = useState(null);
   const [editFormData, setEditFormData] = useState({ coverLetter: '', resume: null });
-  const [resumeUploading, setResumeUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const { uploading: resumeUploading, validateAndUploadResume } = useResumeUpload();
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -51,13 +45,6 @@ const MyApplications = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    return <Badge bg={statusVariants[status] || "secondary"}>{status}</Badge>;
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
 
   const handleViewResume = (resumeUrl) => {
     setSelectedResume(resumeUrl);
@@ -66,11 +53,22 @@ const MyApplications = () => {
 
   const handleEditApplication = (application) => {
     setEditingApplication(application);
+    
+    // Extract filename from URL or use default
+    let filename = 'resume.pdf';
+    if (application.resume) {
+      const urlParts = application.resume.split('/');
+      const fileNameFromUrl = urlParts[urlParts.length - 1];
+      if (fileNameFromUrl) {
+        filename = decodeURIComponent(fileNameFromUrl);
+      }
+    }
+    
     setEditFormData({
       coverLetter: application.coverLetter,
       resume: null,
       currentResumeUrl: application.resume,
-      currentResumeFilename: 'Current Resume'
+      currentResumeFilename: filename
     });
     setShowEditModal(true);
   };
@@ -79,55 +77,13 @@ const MyApplications = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PDF or Word document.');
-      event.target.value = ''; // Clear the input
-      return;
-    }
-
-    // Validate file size (8MB limit)
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error('Resume must be 8MB or smaller.');
-      event.target.value = ''; // Clear the input
-      return;
-    }
-
-    // Validate filename
-    if (file.name.length > 100) {
-      toast.error('Filename is too long. Please use a shorter filename.');
-      event.target.value = ''; // Clear the input
-      return;
-    }
-
-    setResumeUploading(true);
-
-    try {
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-
-      const response = await api.post('/api/upload/document', uploadFormData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
+    const result = await validateAndUploadResume(file);
+    if (result) {
       setEditFormData((prev) => ({
         ...prev,
-        resume: response.data.url,
-        resumeFilename: response.data.filename || file.name
+        resume: result.url,
+        resumeFilename: result.filename
       }));
-      toast.success('Resume uploaded successfully');
-    } catch (uploadErr) {
-      toast.error(uploadErr.response?.data?.error || 'Failed to upload resume.');
-    } finally {
-      setResumeUploading(false);
     }
   };
 
@@ -203,7 +159,7 @@ const MyApplications = () => {
                           </Link>
                         </h5>
                         <span className="status-pill" style={{ background: "rgba(255,255,255,0.08)" }}>
-                          {getStatusBadge(application.status)}
+                          <Badge bg={getStatusBadge(application.status)}>{application.status}</Badge>
                         </span>
                       </div>
 
@@ -328,14 +284,15 @@ const MyApplications = () => {
         onHide={() => setShowResumeModal(false)}
         size="lg"
         centered
+        contentClassName="bg-white"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Resume Preview</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           {selectedResume && <PDFViewer fileUrl={selectedResume} />}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
           <Button variant="secondary" onClick={() => setShowResumeModal(false)}>
             Close
           </Button>
@@ -384,22 +341,31 @@ const MyApplications = () => {
                   )}
                   {editFormData.resume && !resumeUploading && (
                     <div className="mt-2 small">
-                      <strong>New resume uploaded:</strong>{' '}
-                      <span className="text-muted me-2">
-                        {editFormData.resumeFilename}
-                      </span>
+                      <strong>New resume uploaded:</strong>{" "}
+                      <span className="text-muted me-2">{editFormData.resumeFilename}</span>
+                      <Button
+                        variant="outline-light"
+                        size="sm"
+                        onClick={() => handleViewResume(editFormData.resume)}
+                        className="text-muted border-0 bg-transparent"
+                        style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                      >
+                        <i className="fas fa-eye me-1"></i>View Resume
+                      </Button>
                     </div>
                   )}
                   {editFormData.currentResumeUrl && !editFormData.resume && (
                     <div className="mt-2 small">
-                      <strong>Current resume:</strong>{' '}
+                      <strong>Current file:</strong>{" "}
+                      <span className="text-muted me-2">{editFormData.currentResumeFilename || "resume.pdf"}</span>
                       <Button
-                        variant="link"
-                        className="p-0 text-decoration-none gradient-text"
-                        style={{ fontSize: "0.875rem" }}
+                        variant="outline-light"
+                        size="sm"
                         onClick={() => handleViewResume(editFormData.currentResumeUrl)}
+                        className="text-muted border-0 bg-transparent"
+                        style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
                       >
-                        View Current Resume
+                        <i className="fas fa-eye me-1"></i>View Resume
                       </Button>
                     </div>
                   )}

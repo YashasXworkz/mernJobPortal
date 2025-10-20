@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { handleError } = require('../utils/errorHandler');
 
 const router = express.Router();
 
@@ -60,18 +61,7 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    if (error.name === 'MongoNetworkError') {
-      return res.status(500).json({
-        error: 'Database connection error. Please ensure MongoDB is running.'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({ error: errors.join(', ') });
-    }
-
-    res.status(500).json({ error: 'Server error. Please try again.' });
+    handleError(error, res);
   }
 });
 
@@ -107,7 +97,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    handleError(error, res);
   }
 });
 
@@ -125,7 +115,7 @@ router.get('/me', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    handleError(error, res);
   }
 });
 
@@ -160,7 +150,7 @@ router.put('/profile', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    handleError(error, res);
   }
 });
 

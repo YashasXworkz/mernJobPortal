@@ -16,9 +16,9 @@ const LoadingSpinner = ({ message = "Loading...", size = "default" }) => {
 
   return (
     <Container className="py-5">
-      <div className="d-flex flex-column align-items-center justify-content-center">
-        <Spinner animation="border" variant="primary" className="mb-3" />
-        <div>{message}</div>
+      <div className="d-flex align-items-center justify-content-center gap-3">
+        <Spinner animation="border" variant="primary" />
+        <div className="text-muted">{message}</div>
       </div>
     </Container>
   );

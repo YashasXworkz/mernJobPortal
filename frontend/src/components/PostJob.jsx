@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 

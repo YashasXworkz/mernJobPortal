@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Button, Card, Col, Container, Form, Image, Modal, Row, Spinner } from "react-bootstrap";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
+import { useResumeUpload } from "../hooks/useResumeUpload.js";
 
 const initialFormState = {
   name: "",
@@ -28,16 +29,16 @@ const Profile = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [resumeUploading, setResumeUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const { uploading: resumeUploading, validateAndUploadResume } = useResumeUpload();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const response = await api.get("/api/auth/me");
         setUser(response.data.user);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load profile data. Please refresh or log in again.");
       } finally {
         setProfileLoading(false);
@@ -188,55 +189,13 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a PDF or Word document.");
-      event.target.value = ""; // Clear the input
-      return;
-    }
-
-    // Validate file size (8MB limit)
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("Resume must be 8MB or smaller.");
-      event.target.value = ""; // Clear the input
-      return;
-    }
-
-    // Validate filename
-    if (file.name.length > 100) {
-      toast.error("Filename is too long. Please use a shorter filename.");
-      event.target.value = ""; // Clear the input
-      return;
-    }
-
-    setResumeUploading(true);
-
-    try {
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
-
-      const response = await api.post("/api/upload/document", uploadFormData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
+    const result = await validateAndUploadResume(file);
+    if (result) {
       setFormData((prev) => ({
         ...prev,
-        resume: response.data.url,
-        resumeFilename: response.data.filename || file.name,
+        resume: result.url,
+        resumeFilename: result.filename,
       }));
-      toast.success("Resume uploaded successfully");
-    } catch (uploadErr) {
-      toast.error(uploadErr.response?.data?.error || "Failed to upload resume.");
-    } finally {
-      setResumeUploading(false);
     }
   };
 
@@ -494,14 +453,20 @@ const Profile = () => {
       </Row>
 
       {/* PDF Viewer Modal */}
-      <Modal show={showPdfViewer} onHide={() => setShowPdfViewer(false)} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Resume Preview</Modal.Title>
+      <Modal 
+        show={showPdfViewer} 
+        onHide={() => setShowPdfViewer(false)} 
+        size="lg" 
+        centered
+        contentClassName="bg-white"
+      >
+        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           {formData.resume && <PDFViewer fileUrl={formData.resume} />}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
           <Button variant="secondary" onClick={() => setShowPdfViewer(false)}>
             Close
           </Button>

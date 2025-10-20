@@ -1,56 +1,53 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const auth = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+/**
+ * Factory function to create authentication middleware
+ * @param {boolean} required - Whether authentication is required
+ * @returns {Function} Middleware function
+ */
+const createAuthMiddleware = (required = true) => {
+  return async (req, res, next) => {
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
 
-    if (!token) {
-      return res.status(401).json({ error: 'No token, authorization denied' });
-    }
+      if (!token) {
+        if (required) {
+          return res.status(401).json({ error: 'No token, authorization denied' });
+        }
+        req.user = null;
+        req.token = null;
+        return next();
+      }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId);
 
-    // Find user by ID only (no token storage check)
-    const user = await User.findById(decoded.userId);
+      if (!user) {
+        if (required) {
+          return res.status(401).json({ error: 'User not found' });
+        }
+        req.user = null;
+        req.token = null;
+        return next();
+      }
 
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    req.token = token;
-    req.user = user;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: 'Token is not valid' });
-  }
-};
-
-const optionalAuth = async (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    req.user = null;
-    return next();
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
+      req.token = token;
+      req.user = user;
+      next();
+    } catch (error) {
+      if (required) {
+        return res.status(401).json({ error: 'Token is not valid' });
+      }
       req.user = null;
-      return next();
+      req.token = null;
+      next();
     }
-
-    req.token = token;
-    req.user = user;
-    next();
-  } catch (error) {
-    req.user = null;
-    next();
-  }
+  };
 };
+
+const auth = createAuthMiddleware(true);
+const optionalAuth = createAuthMiddleware(false);
 
 const requireRole = (role) => {
   return (req, res, next) => {
@@ -61,11 +58,6 @@ const requireRole = (role) => {
   };
 };
 
-const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
+const requireAdmin = requireRole('admin');
 
 module.exports = { auth, optionalAuth, requireRole, requireAdmin };

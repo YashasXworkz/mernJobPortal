@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "react-bootstrap";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import PDFViewer from "./shared/PDFViewer.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
+import { useResumeUpload } from "../hooks/useResumeUpload.js";
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -15,15 +16,18 @@ const JobDetails = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const applicationFormRef = useRef(null);
   const [applicationData, setApplicationData] = useState({
     coverLetter: "",
     resume: "",
   });
-  const [resumeUploading, setResumeUploading] = useState(false);
+  const [isProfileResume, setIsProfileResume] = useState(false);
+  const [userWantsCustomResume, setUserWantsCustomResume] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [currentResumeUrl, setCurrentResumeUrl] = useState("");
+  const { uploading: resumeUploading, validateAndUploadResume } = useResumeUpload();
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -43,6 +47,17 @@ const JobDetails = () => {
     fetchJobDetails();
   }, [id]);
 
+  // Auto-populate resume from user profile
+  useEffect(() => {
+    if (showApplicationForm && user?.profile?.resume && !applicationData.resume && !userWantsCustomResume) {
+      setApplicationData((prev) => ({
+        ...prev,
+        resume: user.profile.resume,
+      }));
+      setIsProfileResume(true);
+    }
+  }, [showApplicationForm, user, applicationData.resume, userWantsCustomResume]);
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setApplicationData((prev) => ({
@@ -55,41 +70,15 @@ const JobDetails = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Please upload a PDF or Word document.");
-      return;
-    }
+    setUserWantsCustomResume(true);
+    setIsProfileResume(false);
 
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("Resume must be 8MB or smaller.");
-      return;
-    }
-
-    setResumeUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await api.post("/api/upload/document", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
+    const result = await validateAndUploadResume(file);
+    if (result) {
       setApplicationData((prev) => ({
         ...prev,
-        resume: response.data.url,
+        resume: result.url,
       }));
-    } catch (uploadError) {
-      toast.error(uploadError.response?.data?.error || "Failed to upload resume.");
-    } finally {
-      setResumeUploading(false);
     }
   };
 
@@ -101,6 +90,8 @@ const JobDetails = () => {
       const response = await api.post(`/api/applications/${id}`, applicationData);
       setShowApplicationForm(false);
       setApplicationData({ coverLetter: "", resume: "" });
+      setUserWantsCustomResume(false); // Reset for next application
+      setIsProfileResume(false);
       toast.success(response.data.message || "Application submitted successfully");
 
       // Refresh job details to show updated applicants count
@@ -108,9 +99,26 @@ const JobDetails = () => {
       setJob(jobResponse.data.job);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to submit application");
+      setIsProfileResume(false);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRemoveResume = () => {
+    setUserWantsCustomResume(true);
+    setApplicationData((prev) => ({
+      ...prev,
+      resume: "",
+    }));
+    setIsProfileResume(false);
+  };
+
+  const handleCancelApplication = () => {
+    setShowApplicationForm(false);
+    setApplicationData({ coverLetter: "", resume: "" });
+    setUserWantsCustomResume(false); // Reset for next time
+    setIsProfileResume(false);
   };
 
   const handleEditJob = () => {
@@ -135,7 +143,7 @@ const JobDetails = () => {
       }
       setCurrentResumeUrl(resumeUrl);
       setShowPdfViewer(true);
-    } catch (error) {
+    } catch {
       toast.error("Failed to open resume viewer");
     }
   };
@@ -216,7 +224,24 @@ const JobDetails = () => {
                 </Button>
               )}
               {user && user.role === "jobseeker" && !hasApplied && (
-                <Button variant="primary" onClick={() => setShowApplicationForm((prev) => !prev)}>
+                <Button 
+                  variant="primary" 
+                  onClick={() => {
+                    setShowApplicationForm((prev) => {
+                      const newState = !prev;
+                      if (newState) {
+                        // Scroll to application form after state updates
+                        setTimeout(() => {
+                          applicationFormRef.current?.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                          });
+                        }, 100);
+                      }
+                      return newState;
+                    });
+                  }}
+                >
                   {showApplicationForm ? "Cancel" : "Apply Now"}
                 </Button>
               )}
@@ -370,7 +395,7 @@ const JobDetails = () => {
       </Card>
 
       {showApplicationForm && user && user.role === "jobseeker" && (
-        <Card className="mt-4 glass-panel border-0">
+        <Card ref={applicationFormRef} className="mt-4 glass-panel border-0">
           <Card.Body className="p-4">
             <h4 className="mb-4 gradient-text">Apply for this position</h4>
             <Form onSubmit={handleApply}>
@@ -391,32 +416,80 @@ const JobDetails = () => {
                 <Form.Label className="text-muted">
                   Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small>
                 </Form.Label>
-                <Form.Control
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleResumeUpload}
-                  className="file-input-modern"
-                  disabled={resumeUploading}
-                  required={!applicationData.resume}
-                />
-                {resumeUploading && (
-                  <div className="mt-2 text-muted small">
-                    <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
+                
+                {isProfileResume && applicationData.resume ? (
+                  <div 
+                    className="py-3 px-3 d-flex align-items-center justify-content-between"
+                    style={{
+                      backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                      border: '1px solid rgba(52, 211, 153, 0.3)',
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <div className="d-flex align-items-center">
+                      <i className="fas fa-check-circle me-2" style={{ color: '#34d399' }}></i>
+                      <span style={{ fontSize: '0.95rem' }}>
+                        <strong>Resume attached from your profile</strong>
+                      </span>
+                    </div>
+                    <div className="d-flex align-items-center gap-3">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewResume(applicationData.resume);
+                        }}
+                        className="p-0 text-decoration-none"
+                        style={{ color: '#34d399', fontSize: '0.9rem' }}
+                      >
+                        <i className="fas fa-eye me-1"></i>View
+                      </Button>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveResume();
+                        }}
+                        className="p-0 text-decoration-none"
+                        style={{ color: '#94a3b8', fontSize: '0.9rem' }}
+                      >
+                        <i className="fas fa-times me-1"></i>Change
+                      </Button>
+                    </div>
                   </div>
-                )}
-                {applicationData.resume && !resumeUploading && (
-                  <div className="mt-2 small">
-                    <strong>Uploaded:</strong>{" "}
-                    <Button
-                      variant="outline-light"
-                      size="sm"
-                      onClick={() => handleViewResume(applicationData.resume)}
-                      className="text-muted border-0 bg-transparent"
-                      style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
-                    >
-                      <i className="fas fa-eye me-1"></i>View Resume
-                    </Button>
-                  </div>
+                ) : (
+                  <>
+                    <Form.Control
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleResumeUpload}
+                      className="file-input-modern"
+                      disabled={resumeUploading}
+                      required={!applicationData.resume}
+                    />
+                    {resumeUploading && (
+                      <div className="mt-2 text-muted small">
+                        <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
+                      </div>
+                    )}
+                    {applicationData.resume && !resumeUploading && !isProfileResume && (
+                      <div className="mt-2 small">
+                        <strong>Uploaded:</strong>{" "}
+                        <Button
+                          variant="outline-light"
+                          size="sm"
+                          onClick={() => handleViewResume(applicationData.resume)}
+                          className="text-muted border-0 bg-transparent"
+                          style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                        >
+                          <i className="fas fa-eye me-1"></i>View Resume
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </Form.Group>
 
@@ -424,7 +497,7 @@ const JobDetails = () => {
                 <Button variant="primary" type="submit" disabled={submitting}>
                   {submitting ? "Submitting..." : "Submit Application"}
                 </Button>
-                <Button variant="outline-light" type="button" onClick={() => setShowApplicationForm(false)}>
+                <Button variant="outline-light" type="button" onClick={handleCancelApplication}>
                   Cancel
                 </Button>
               </div>
@@ -455,14 +528,15 @@ const JobDetails = () => {
         onHide={() => setShowPdfViewer(false)} 
         size="lg"
         centered
+        contentClassName="bg-white"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Resume Preview</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
           <Button 
             variant="secondary" 
             onClick={() => setShowPdfViewer(false)}

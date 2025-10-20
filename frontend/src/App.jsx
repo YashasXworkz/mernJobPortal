@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 import { Container } from "react-bootstrap";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
@@ -87,19 +86,34 @@ function App() {
           <Footer />
         </div>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={true}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-          limit={3}
-          stacked
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          gutter={8}
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: 'rgba(15, 23, 42, 0.95)',
+              color: '#f1f5f9',
+              border: '1px solid rgba(148, 163, 184, 0.2)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(16px)',
+              padding: '16px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            },
+            success: {
+              iconTheme: {
+                primary: '#34d399',
+                secondary: '#0f172a',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#f87171',
+                secondary: '#0f172a',
+              },
+            },
+          }}
         />
       </Router>
     </AuthProvider>

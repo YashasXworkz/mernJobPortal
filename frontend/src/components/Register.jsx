@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +14,7 @@ const Register = () => {
     phone: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -127,22 +128,32 @@ const Register = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="text-muted">Password</Form.Label>
-                      <Form.Control
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder="Create a password"
-                        minLength={6}
-                        required
-                      />
+                      <div className="position-relative">
+                        <Form.Control
+                          type={showPassword ? 'text' : 'password'}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          placeholder="Create a password"
+                          minLength={6}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ border: 'none', padding: '0.5rem', cursor: 'pointer' }}
+                        >
+                          <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                        </button>
+                      </div>
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="text-muted">Confirm Password</Form.Label>
                       <Form.Control
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}

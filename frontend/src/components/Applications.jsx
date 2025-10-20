@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { Badge, Button, Card, Col, Container, Form, Modal, Row } from "react-bootstrap";
+import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
+import { formatDate, getStatusBadge } from "../lib/utils.js";
 
 const Applications = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [allApplications, setAllApplications] = useState([]);
@@ -138,20 +137,6 @@ const Applications = () => {
     setShowPdfViewer(true);
   };
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      pending: "warning",
-      reviewed: "info",
-      shortlisted: "success",
-      rejected: "danger",
-      accepted: "primary",
-    };
-    return <Badge bg={variants[status] || "secondary"}>{status}</Badge>;
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
 
   if (!user) {
     return <LoadingSpinner />;
@@ -294,12 +279,7 @@ const Applications = () => {
         </Card.Body>
       </Card>
 
-      {loading && (
-        <div className="loading d-flex flex-column align-items-center justify-content-center">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading applications...</div>
-        </div>
-      )}
+      {loading && <LoadingSpinner message="Loading applications..." />}
 
       {!selectedJob && !loading && (
         <Card className="glass-panel border-0 text-center">
@@ -346,7 +326,7 @@ const Applications = () => {
                     <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
                       <h4 className="mb-0 gradient-text">{application.applicant.name}</h4>
                       <div className="status-pill" style={{ background: "rgba(255,255,255,0.08)" }}>
-                        {getStatusBadge(application.status)}
+                        <Badge bg={getStatusBadge(application.status)}>{application.status}</Badge>
                       </div>
                     </div>
                     <div className="application-meta">
@@ -596,14 +576,15 @@ const Applications = () => {
         onHide={() => setShowPdfViewer(false)} 
         size="lg"
         centered
+        contentClassName="bg-white"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>{currentApplicantName}'s Resume</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
+          <Modal.Title style={{ color: '#1f2937' }}>{currentApplicantName}'s Resume</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
           <Button 
             variant="secondary" 
             onClick={() => setShowPdfViewer(false)}

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { formatSalary } from "../lib/utils.js";
 import {
   Badge,
   Button,
@@ -14,9 +15,9 @@ import {
   Modal,
   Pagination,
   Row,
-  Spinner,
 } from "react-bootstrap";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
+import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 
 const initialFilters = {
   search: "",
@@ -42,6 +43,7 @@ const Jobs = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
+  const toastIdRef = useRef(null);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -61,7 +63,11 @@ const Jobs = () => {
       setJobs(response.data.jobs);
       setTotalPages(response.data.totalPages || 1);
     } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to fetch jobs");
+      // Prevent duplicate toasts in React StrictMode
+      if (toastIdRef.current) {
+        toast.dismiss(toastIdRef.current);
+      }
+      toastIdRef.current = toast.error(err.response?.data?.error || "Failed to fetch jobs");
     } finally {
       setLoading(false);
     }
@@ -88,22 +94,6 @@ const Jobs = () => {
   const clearFilters = () => {
     setFilters(initialFilters);
     setPage(1);
-  };
-
-  const formatSalary = (salary) => {
-    if (!salary) {
-      return null;
-    }
-
-    if (salary.min != null && salary.max != null) {
-      return `₹${salary.min.toLocaleString()} - ₹${salary.max.toLocaleString()}`;
-    } else if (salary.min != null) {
-      return `From ₹${salary.min.toLocaleString()}`;
-    } else if (salary.max != null) {
-      return `Up to ₹${salary.max.toLocaleString()}`;
-    }
-
-    return null;
   };
 
   const handleEditJob = (jobId) => {
@@ -249,12 +239,7 @@ const Jobs = () => {
         </Card.Body>
       </Card>
 
-      {loading && (
-        <div className="loading">
-          <Spinner animation="border" variant="primary" className="mb-3" />
-          <div>Loading jobs...</div>
-        </div>
-      )}
+      {loading && <LoadingSpinner message="Loading jobs..." />}
 
       <Row className="g-4">
         {jobs.map((job) => {

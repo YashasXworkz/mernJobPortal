@@ -9,14 +9,18 @@ import "@react-pdf-viewer/default-layout/lib/styles/index.css";
  */
 const PDFViewer = ({ fileUrl }) => {
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    sidebarTabs: (defaultTabs) => [
+    // eslint-disable-next-line no-unused-vars
+    sidebarTabs: (_defaultTabs) => [
       // Remove sidebar tabs to keep it clean
     ],
   });
 
   return (
     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-      <div style={{ height: "750px" }}>
+      <div style={{ 
+        height: "750px", 
+        backgroundColor: "#ffffff" 
+      }}>
         <Viewer fileUrl={fileUrl} plugins={[defaultLayoutPluginInstance]} />
       </div>
     </Worker>
