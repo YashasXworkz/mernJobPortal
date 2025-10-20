@@ -322,11 +322,10 @@ const Profile = () => {
                               <strong>Current file:</strong>{" "}
                               <span className="text-muted me-2">{formData.resumeFilename || "resume.pdf"}</span>
                               <Button
-                                variant="outline-light"
-                                size="sm"
+                                variant="link"
                                 onClick={() => setShowPdfViewer(true)}
-                                className="text-muted border-0 bg-transparent"
-                                style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                                className="p-0 text-decoration-none gradient-text"
+                                style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                               >
                                 <i className="fas fa-eye me-1"></i>View Resume
                               </Button>

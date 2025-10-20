@@ -186,7 +186,12 @@ const MyApplications = () => {
                     </div>
 
                     <div className="d-flex flex-column gap-2 text-end">
-                      <Button variant="outline-light" as={Link} to={`/jobs/${application.job._id}`}>
+                      <Button 
+                        variant="outline-light" 
+                        as={Link} 
+                        to={`/jobs/${application.job._id}`}
+                        state={{ from: 'my-applications' }}
+                      >
                         View Job Details
                       </Button>
 
@@ -223,11 +228,10 @@ const MyApplications = () => {
                           <div>
                             <strong>Resume:</strong>{" "}
                             <Button
-                              variant="outline-light"
-                              size="sm"
+                              variant="link"
                               onClick={() => handleViewResume(application.resume)}
-                              className="text-muted border-0 bg-transparent"
-                              style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                              className="p-0 text-decoration-none gradient-text"
+                              style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                             >
                               <i className="fas fa-eye me-1"></i>View Resume
                             </Button>
@@ -253,11 +257,7 @@ const MyApplications = () => {
                       <h5 className="mb-2 gradient-text">Interview Scheduled</h5>
                       <div
                         className="glass-panel p-3 border-0"
-                        style={{
-                          backdropFilter: "blur(16px)",
-                          boxShadow: "none",
-                          background: "rgba(34, 197, 94, 0.12)",
-                        }}
+                        style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
                       >
                         <p className="small mb-0">
                           <strong>Date:</strong> {formatDate(application.interviewDate)}
@@ -301,15 +301,18 @@ const MyApplications = () => {
 
       {/* Edit Application Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" className="edit-modal">
-        <div className="glass-panel border-0 rounded-4">
+        <div className="glass-panel border-0 rounded-4 edit-modal-content">
           <Modal.Header closeButton className="border-0 pb-0">
-            <Modal.Title className="gradient-text fw-bold">Edit Application</Modal.Title>
+            <Modal.Title className="gradient-text fw-bold">
+              <i className="fas fa-edit me-2"></i>
+              Edit Application
+            </Modal.Title>
           </Modal.Header>
-          <Modal.Body className="border-0">
+          <Modal.Body className="border-0 p-4">
             <Row className="g-4">
               <Col lg={12}>
                 <Form.Group>
-                  <Form.Label className="text-muted">Cover Letter</Form.Label>
+                  <Form.Label className="text-muted fw-semibold">Cover Letter</Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={6}
@@ -321,11 +324,9 @@ const MyApplications = () => {
               </Col>
               <Col lg={12}>
                 <Form.Group>
-                  <Form.Label className="text-muted">
-                    Resume{' '}
-                    <small className="text-muted opacity-75">
-                      (Optional - Upload new resume)
-                    </small>
+                  <Form.Label className="text-muted fw-semibold">
+                    Resume
+                    <span className="ms-2 small fw-normal text-muted">(Optional - Upload new resume)</span>
                   </Form.Label>
                   <Form.Control
                     type="file"
@@ -344,11 +345,10 @@ const MyApplications = () => {
                       <strong>New resume uploaded:</strong>{" "}
                       <span className="text-muted me-2">{editFormData.resumeFilename}</span>
                       <Button
-                        variant="outline-light"
-                        size="sm"
+                        variant="link"
                         onClick={() => handleViewResume(editFormData.resume)}
-                        className="text-muted border-0 bg-transparent"
-                        style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                        className="p-0 text-decoration-none gradient-text"
+                        style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                       >
                         <i className="fas fa-eye me-1"></i>View Resume
                       </Button>
@@ -359,11 +359,10 @@ const MyApplications = () => {
                       <strong>Current file:</strong>{" "}
                       <span className="text-muted me-2">{editFormData.currentResumeFilename || "resume.pdf"}</span>
                       <Button
-                        variant="outline-light"
-                        size="sm"
+                        variant="link"
                         onClick={() => handleViewResume(editFormData.currentResumeUrl)}
-                        className="text-muted border-0 bg-transparent"
-                        style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                        className="p-0 text-decoration-none gradient-text"
+                        style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                       >
                         <i className="fas fa-eye me-1"></i>View Resume
                       </Button>
@@ -402,6 +401,16 @@ const MyApplications = () => {
           </Modal.Footer>
         </div>
       </Modal>
+      <style>{`
+        .edit-modal-content {
+          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .edit-modal .modal-dialog:hover .edit-modal-content {
+          transform: translateY(-6px);
+          border-color: rgba(159, 116, 255, 0.55) !important;
+          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+        }
+      `}</style>
     </Container>
   );
 };

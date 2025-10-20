@@ -114,7 +114,7 @@ router.put("/:applicationId", auth, requireRole("employer"), async (req, res) =>
 
     const updatedApplication = await Application.findByIdAndUpdate(req.params.applicationId, updateData, {
       new: true,
-    }).populate("applicant", "name email");
+    }).populate("applicant", "name email phone profile");
 
     if (status && status !== previousStatus) {
       const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);

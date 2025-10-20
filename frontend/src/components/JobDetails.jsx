@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "react-bootstrap";
 import toast from "react-hot-toast";
@@ -11,7 +11,9 @@ import { useResumeUpload } from "../hooks/useResumeUpload.js";
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const fromMyApplications = location.state?.from === 'my-applications';
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
@@ -49,14 +51,14 @@ const JobDetails = () => {
 
   // Auto-populate resume from user profile
   useEffect(() => {
-    if (showApplicationForm && user?.profile?.resume && !applicationData.resume && !userWantsCustomResume) {
+    if (showApplicationForm && user?.profile?.resume && !userWantsCustomResume) {
       setApplicationData((prev) => ({
         ...prev,
         resume: user.profile.resume,
       }));
       setIsProfileResume(true);
     }
-  }, [showApplicationForm, user, applicationData.resume, userWantsCustomResume]);
+  }, [showApplicationForm, user?.profile?.resume, userWantsCustomResume]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -186,8 +188,11 @@ const JobDetails = () => {
   return (
     <Container className="py-5">
       <div className="mb-4">
-        <Link to="/jobs" className="gradient-text text-decoration-none">
-          ← Back to Jobs
+        <Link 
+          to={fromMyApplications ? "/my-applications" : "/jobs"} 
+          className="gradient-text text-decoration-none"
+        >
+          ← Back to {fromMyApplications ? "My Applications" : "Jobs"}
         </Link>
       </div>
 
@@ -417,51 +422,56 @@ const JobDetails = () => {
                   Resume <small className="text-muted opacity-75">(PDF or Word, max 8MB)</small>
                 </Form.Label>
                 
-                {isProfileResume && applicationData.resume ? (
+                {user?.profile?.resume && !userWantsCustomResume ? (
                   <div 
-                    className="py-3 px-3 d-flex align-items-center justify-content-between"
+                    className="py-3 px-4 d-flex flex-column gap-3"
                     style={{
-                      backgroundColor: 'rgba(52, 211, 153, 0.1)',
-                      border: '1px solid rgba(52, 211, 153, 0.3)',
-                      borderRadius: '8px',
+                      backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                      border: '2px solid rgba(52, 211, 153, 0.3)',
+                      borderRadius: '12px',
                     }}
                   >
-                    <div className="d-flex align-items-center">
-                      <i className="fas fa-check-circle me-2" style={{ color: '#34d399' }}></i>
-                      <span style={{ fontSize: '0.95rem' }}>
-                        <strong>Resume attached from your profile</strong>
-                      </span>
-                    </div>
-                    <div className="d-flex align-items-center gap-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="fas fa-check-circle" style={{ color: '#34d399', fontSize: '1.1rem' }}></i>
+                        <div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#34d399' }}>
+                            Using your profile resume
+                          </div>
+                          <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                            Your resume will be automatically attached to this application
+                          </div>
+                        </div>
+                      </div>
                       <Button
                         variant="link"
-                        size="sm"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleViewResume(applicationData.resume);
+                          handleViewResume(user.profile.resume);
                         }}
-                        className="p-0 text-decoration-none"
-                        style={{ color: '#34d399', fontSize: '0.9rem' }}
+                        className="p-0 text-decoration-none gradient-text"
+                        style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                       >
-                        <i className="fas fa-eye me-1"></i>View
-                      </Button>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemoveResume();
-                        }}
-                        className="p-0 text-decoration-none"
-                        style={{ color: '#94a3b8', fontSize: '0.9rem' }}
-                      >
-                        <i className="fas fa-times me-1"></i>Change
+                        <i className="fas fa-eye me-1"></i>View Resume
                       </Button>
                     </div>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUserWantsCustomResume(true);
+                        setIsProfileResume(false);
+                        setApplicationData(prev => ({ ...prev, resume: '' }));
+                      }}
+                      className="align-self-start"
+                    >
+                      <i className="fas fa-upload me-2"></i>Upload Different Resume
+                    </Button>
                   </div>
                 ) : (
-                  <>
+                  <div>
                     <Form.Control
                       type="file"
                       accept=".pdf,.doc,.docx"
@@ -475,21 +485,20 @@ const JobDetails = () => {
                         <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
                       </div>
                     )}
-                    {applicationData.resume && !resumeUploading && !isProfileResume && (
+                    {applicationData.resume && !resumeUploading && (
                       <div className="mt-2 small">
                         <strong>Uploaded:</strong>{" "}
                         <Button
-                          variant="outline-light"
-                          size="sm"
+                          variant="link"
                           onClick={() => handleViewResume(applicationData.resume)}
-                          className="text-muted border-0 bg-transparent"
-                          style={{ color: "inherit", padding: "0.25rem 0.5rem" }}
+                          className="p-0 text-decoration-none gradient-text"
+                          style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
                         >
                           <i className="fas fa-eye me-1"></i>View Resume
                         </Button>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </Form.Group>
 

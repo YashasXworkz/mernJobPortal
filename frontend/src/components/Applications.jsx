@@ -23,6 +23,7 @@ const Applications = () => {
     interviewDate: "",
     interviewNotes: "",
   });
+  const [scheduleInterview, setScheduleInterview] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [currentResumeUrl, setCurrentResumeUrl] = useState("");
   const [currentApplicantName, setCurrentApplicantName] = useState("");
@@ -100,9 +101,13 @@ const Applications = () => {
         interviewNotes,
       });
 
-      setApplications((prev) => prev.map((app) => (app._id === applicationId ? response.data.application : app)));
+      // Update both applications and allApplications to keep them in sync
+      const updatedApp = response.data.application;
+      setApplications((prev) => prev.map((app) => (app._id === applicationId ? updatedApp : app)));
+      setAllApplications((prev) => prev.map((app) => (app._id === applicationId ? updatedApp : app)));
 
       setShowStatusModal(false);
+      toast.success("Application status updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to update application status");
     }
@@ -110,6 +115,8 @@ const Applications = () => {
 
   const handleStatusChange = (application) => {
     setSelectedApplication(application);
+    const hasInterview = !!(application.interviewDate || application.interviewNotes);
+    setScheduleInterview(hasInterview);
     setStatusUpdate({
       status: "",
       notes: application.notes || "",
@@ -120,13 +127,23 @@ const Applications = () => {
   };
 
   const handleStatusSubmit = () => {
-    if (statusUpdate.status && selectedApplication) {
+    if (!statusUpdate.status) {
+      toast.error("Please select a status");
+      return;
+    }
+    
+    if (scheduleInterview && !statusUpdate.interviewDate) {
+      toast.error("Please select an interview date");
+      return;
+    }
+    
+    if (selectedApplication) {
       updateApplicationStatus(
         selectedApplication._id,
         statusUpdate.status,
         statusUpdate.notes,
-        statusUpdate.interviewDate,
-        statusUpdate.interviewNotes
+        scheduleInterview ? statusUpdate.interviewDate : "",
+        scheduleInterview ? statusUpdate.interviewNotes : ""
       );
     }
   };
@@ -400,65 +417,75 @@ const Applications = () => {
                           </p>
                         )}
 
-                        {/* Profile information if available */}
-                        {application.applicant.profile?.bio && (
-                          <p className="mb-2">
-                            <strong>Bio:</strong> {application.applicant.profile.bio}
-                          </p>
-                        )}
-                        {application.applicant.profile?.skills && application.applicant.profile.skills.length > 0 && (
-                          <div className="mb-2">
-                            <strong>Skills:</strong>
-                            <div className="d-flex flex-wrap gap-1 mt-1">
-                              {application.applicant.profile.skills.map((skill, index) => (
-                                <span key={index} className="skill-tag">
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
+                        {/* Profile information - check if profile exists */}
+                        {application.applicant.profile ? (
+                          <>
+                            {application.applicant.profile.bio && (
+                              <p className="mb-2">
+                                <strong>Bio:</strong> {application.applicant.profile.bio}
+                              </p>
+                            )}
+                            {application.applicant.profile.skills && application.applicant.profile.skills.length > 0 && (
+                              <div className="mb-2">
+                                <strong>Skills:</strong>
+                                <div className="d-flex flex-wrap gap-1 mt-1">
+                                  {application.applicant.profile.skills.map((skill, index) => (
+                                    <span key={index} className="skill-tag">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {application.applicant.profile.experience && (
+                              <p className="mb-2">
+                                <strong>Experience:</strong> {application.applicant.profile.experience}
+                              </p>
+                            )}
+                            {application.applicant.profile.location && (
+                              <p className="mb-2">
+                                <strong>Location:</strong> {application.applicant.profile.location}
+                              </p>
+                            )}
+                            {application.applicant.profile.resume && (
+                              <p className="mb-2">
+                                <strong>Resume:</strong>{" "}
+                                <Button
+                                  variant="link"
+                                  className="p-0 text-decoration-none gradient-text"
+                                  style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                                  onClick={() => handleViewResume(
+                                    application.applicant.profile.resume, 
+                                    application.applicant.name
+                                  )}
+                                >
+                                  <i className="fas fa-eye me-1"></i>View Resume
+                                </Button>
+                              </p>
+                            )}
+
+                            {/* Show message if profile exists but no fields are filled */}
+                            {!application.applicant.profile.bio &&
+                              (!application.applicant.profile.skills || application.applicant.profile.skills.length === 0) &&
+                              !application.applicant.profile.experience &&
+                              !application.applicant.profile.location &&
+                              !application.applicant.profile.resume && (
+                                <div className="mt-3 pt-2 border-top border-secondary border-opacity-25">
+                                  <p className="text-muted small mb-0 fst-italic">
+                                    <i className="fas fa-info-circle me-2"></i>
+                                    This applicant hasn't completed their profile yet.
+                                  </p>
+                                </div>
+                              )}
+                          </>
+                        ) : (
+                          <div className="mt-3 pt-2 border-top border-secondary border-opacity-25">
+                            <p className="text-muted small mb-0 fst-italic">
+                              <i className="fas fa-info-circle me-2"></i>
+                              This applicant hasn't completed their profile yet.
+                            </p>
                           </div>
                         )}
-                        {application.applicant.profile?.experience && (
-                          <p className="mb-2">
-                            <strong>Experience:</strong> {application.applicant.profile.experience}
-                          </p>
-                        )}
-                        {application.applicant.profile?.location && (
-                          <p className="mb-2">
-                            <strong>Location:</strong> {application.applicant.profile.location}
-                          </p>
-                        )}
-                        {application.applicant.profile?.resume && (
-                          <p className="mb-2">
-                            <strong>Resume:</strong>{" "}
-                            <Button
-                              variant="link"
-                              className="p-0 text-decoration-none gradient-text"
-                              style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
-                              onClick={() => handleViewResume(
-                                application.applicant.profile.resume, 
-                                application.applicant.name
-                              )}
-                            >
-                              <i className="fas fa-eye me-1"></i>View Resume
-                            </Button>
-                          </p>
-                        )}
-
-                        {/* Show message if no additional profile info */}
-                        {!application.applicant.profile?.bio &&
-                          (!application.applicant.profile?.skills ||
-                            application.applicant.profile.skills.length === 0) &&
-                          !application.applicant.profile?.experience &&
-                          !application.applicant.profile?.location &&
-                          !application.applicant.profile?.resume && (
-                            <div className="mt-3 pt-2 border-top border-secondary border-opacity-25">
-                              <p className="text-muted small mb-0 fst-italic">
-                                <i className="fas fa-info-circle me-2"></i>
-                                This applicant hasn't completed their profile yet.
-                              </p>
-                            </div>
-                          )}
                       </div>
                     </div>
                   </Col>
@@ -481,11 +508,7 @@ const Applications = () => {
                     <h5 className="mb-2 gradient-text">Interview Scheduled</h5>
                     <div
                       className="glass-panel p-3 border-0"
-                      style={{
-                        backdropFilter: "blur(16px)",
-                        boxShadow: "none",
-                        background: "rgba(34, 197, 94, 0.12)",
-                      }}
+                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
                     >
                       <p className="small mb-0">
                         <strong>Date:</strong> {formatDate(application.interviewDate)}
@@ -505,19 +528,23 @@ const Applications = () => {
         ))
       )}
 
-      <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)} className="glass-panel">
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="gradient-text">
-            <i className="fas fa-edit me-2"></i>
-            Update Application Status
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-4">
+      <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)} size="md" className="status-modal">
+        <div className="glass-panel border-0 rounded-4 status-modal-content">
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="gradient-text fw-bold">
+              <i className="fas fa-edit me-2"></i>
+              Update Application Status
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="border-0 p-4">
           <Form.Group className="mb-3">
-            <Form.Label className="text-muted">Status</Form.Label>
+            <Form.Label className="text-muted fw-semibold">
+              Status <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Select
               value={statusUpdate.status}
               onChange={(e) => setStatusUpdate({ ...statusUpdate, status: e.target.value })}
+              required
             >
               <option value="">Select Status</option>
               <option value="pending">Pending</option>
@@ -526,49 +553,116 @@ const Applications = () => {
               <option value="rejected">Rejected</option>
               <option value="accepted">Accepted</option>
             </Form.Select>
+            <Form.Text className="text-muted small">
+              Required field - please select a status to continue
+            </Form.Text>
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label className="text-muted">Notes</Form.Label>
+            <Form.Label className="text-muted fw-semibold">
+              Application Notes
+              <span className="ms-2 small fw-normal text-muted">(General feedback about the candidate)</span>
+            </Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
               value={statusUpdate.notes}
               onChange={(e) => setStatusUpdate({ ...statusUpdate, notes: e.target.value })}
-              placeholder="Add notes about this application..."
+              placeholder="Add your feedback about this candidate..."
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label className="text-muted">Interview Date</Form.Label>
-            <Form.Control
-              type="date"
-              value={statusUpdate.interviewDate}
-              onChange={(e) => setStatusUpdate({ ...statusUpdate, interviewDate: e.target.value })}
+            <Form.Check
+              type="checkbox"
+              id="schedule-interview-check"
+              label="Schedule Interview"
+              checked={scheduleInterview}
+              onChange={(e) => setScheduleInterview(e.target.checked)}
+              className="text-muted fw-semibold"
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label className="text-muted">Interview Notes</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              value={statusUpdate.interviewNotes}
-              onChange={(e) => setStatusUpdate({ ...statusUpdate, interviewNotes: e.target.value })}
-              placeholder="Notes about the interview..."
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer className="border-0">
-          <Button variant="outline-light" onClick={() => setShowStatusModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleStatusSubmit}>
-            <i className="fas fa-save me-2"></i>
-            Update Status
-          </Button>
-        </Modal.Footer>
+          {scheduleInterview && (
+            <div className="interview-fields" style={{ 
+              animation: 'fadeIn 0.3s ease-in',
+              borderLeft: '3px solid rgba(139, 92, 246, 0.5)',
+              paddingLeft: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <Form.Group className="mb-3">
+                <Form.Label className="text-muted fw-semibold">
+                  Interview Date <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  type="date"
+                  value={statusUpdate.interviewDate}
+                  onChange={(e) => setStatusUpdate({ ...statusUpdate, interviewDate: e.target.value })}
+                  required
+                />
+                <Form.Text className="text-muted small">
+                  Required when scheduling an interview
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="text-muted fw-semibold">
+                  Interview Feedback
+                  <span className="ms-2 small fw-normal text-muted">(Notes from the interview)</span>
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  value={statusUpdate.interviewNotes}
+                  onChange={(e) => setStatusUpdate({ ...statusUpdate, interviewNotes: e.target.value })}
+                  placeholder="Document interview observations and feedback..."
+                />
+              </Form.Group>
+            </div>
+          )}
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <div className="d-flex gap-3 w-100 justify-content-end">
+              <Button 
+                variant="outline-light" 
+                onClick={() => setShowStatusModal(false)}
+                className="px-4 py-2 rounded-3"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleStatusSubmit}
+                disabled={!statusUpdate.status || (scheduleInterview && !statusUpdate.interviewDate)}
+                className="px-4 py-2 rounded-3"
+              >
+                <i className="fas fa-save me-2"></i>
+                Update Status
+              </Button>
+            </div>
+          </Modal.Footer>
+        </div>
       </Modal>
+      <style>{`
+        .status-modal-content {
+          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .status-modal .modal-dialog:hover .status-modal-content {
+          transform: translateY(-6px);
+          border-color: rgba(159, 116, 255, 0.55) !important;
+          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
 
       {/* PDF Viewer Modal */}
       <Modal 
