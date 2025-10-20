@@ -23,7 +23,6 @@ const JobDetails = () => {
     coverLetter: "",
     resume: "",
   });
-  const [isProfileResume, setIsProfileResume] = useState(false);
   const [userWantsCustomResume, setUserWantsCustomResume] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -56,7 +55,6 @@ const JobDetails = () => {
         ...prev,
         resume: user.profile.resume,
       }));
-      setIsProfileResume(true);
     }
   }, [showApplicationForm, user?.profile?.resume, userWantsCustomResume]);
 
@@ -73,7 +71,6 @@ const JobDetails = () => {
     if (!file) return;
 
     setUserWantsCustomResume(true);
-    setIsProfileResume(false);
 
     const result = await validateAndUploadResume(file);
     if (result) {
@@ -93,7 +90,6 @@ const JobDetails = () => {
       setShowApplicationForm(false);
       setApplicationData({ coverLetter: "", resume: "" });
       setUserWantsCustomResume(false); // Reset for next application
-      setIsProfileResume(false);
       toast.success(response.data.message || "Application submitted successfully");
 
       // Refresh job details to show updated applicants count
@@ -101,26 +97,15 @@ const JobDetails = () => {
       setJob(jobResponse.data.job);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to submit application");
-      setIsProfileResume(false);
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleRemoveResume = () => {
-    setUserWantsCustomResume(true);
-    setApplicationData((prev) => ({
-      ...prev,
-      resume: "",
-    }));
-    setIsProfileResume(false);
   };
 
   const handleCancelApplication = () => {
     setShowApplicationForm(false);
     setApplicationData({ coverLetter: "", resume: "" });
     setUserWantsCustomResume(false); // Reset for next time
-    setIsProfileResume(false);
   };
 
   const handleEditJob = () => {
@@ -462,7 +447,6 @@ const JobDetails = () => {
                         e.preventDefault();
                         e.stopPropagation();
                         setUserWantsCustomResume(true);
-                        setIsProfileResume(false);
                         setApplicationData(prev => ({ ...prev, resume: '' }));
                       }}
                       className="align-self-start"
