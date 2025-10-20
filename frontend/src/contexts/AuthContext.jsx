@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }) => {
         )
       );
     } catch (error) {
-      console.error('Failed to mark notification as read', error);
+      // Silent fail - notifications are non-critical convenience features
+      // State is already updated optimistically on frontend
     }
   }, []);
 
@@ -51,7 +52,8 @@ export const AuthProvider = ({ children }) => {
       await api.patch('/api/notifications/read-all');
       setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
     } catch (error) {
-      console.error('Failed to mark notifications as read', error);
+      // Silent fail - notifications are non-critical convenience features
+      // State is already updated optimistically on frontend
     }
   }, []);
 

@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { auth } = require('../middleware/auth');
+const { handleError } = require('../utils/errorHandler');
 
 const router = express.Router();
 
@@ -69,7 +70,7 @@ router.post('/image', auth, imageUpload.single('file'), async (req, res) => {
       public_id: result.public_id
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to upload image' });
+    handleError(error, res, 'POST /api/upload/image');
   }
 });
 
@@ -113,8 +114,7 @@ router.post('/document', auth, documentUpload.single('file'), async (req, res) =
       filename: req.file.originalname
     });
   } catch (error) {
-    const message = error.message && error.message.includes('File size') ? error.message : 'Failed to upload document';
-    res.status(500).json({ error: message });
+    handleError(error, res, 'POST /api/upload/document');
   }
 });
 

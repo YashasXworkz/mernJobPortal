@@ -1,7 +1,8 @@
 const express = require("express");
 const Job = require("../models/Job");
 const Application = require("../models/Application");
-const { auth, optionalAuth, requireRole } = require("../middleware/auth");
+const { auth, optionalAuth, requireRole, requireOwnership } = require("../middleware/auth");
+const { handleError } = require("../utils/errorHandler");
 
 const router = express.Router();
 
@@ -48,8 +49,7 @@ router.get("/", async (req, res) => {
       total,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'GET /api/jobs');
   }
 });
 
@@ -90,7 +90,7 @@ router.get("/:id", optionalAuth, async (req, res) => {
 
     res.json({ job });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'GET /api/jobs/:id');
   }
 });
 
@@ -140,27 +140,21 @@ router.post("/", auth, requireRole("employer"), async (req, res) => {
       job,
     });
   } catch (error) {
-    if (error.code === 11000) {
-      res.status(400).json({ error: "Job with this title already exists" });
-    } else {
-      res.status(500).json({ error: "Server error" });
-    }
+    handleError(error, res, 'POST /api/jobs');
   }
 });
 
 // Fixed job update route to properly check permissions
-router.put("/:id", auth, async (req, res) => {
+router.put(
+  "/:id",
+  auth,
+  requireOwnership(
+    (req) => req.params.id,
+    async (id) => await Job.findById(id)
+  ),
+  async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id);
-
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    // Check if user is the job owner
-    if (job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
-    }
+    const job = req.resource; // Job is already fetched and ownership verified by middleware
 
     // Process salary data
     const salaryData = {};
@@ -208,23 +202,21 @@ router.put("/:id", auth, async (req, res) => {
       job: updatedJob,
     });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'PUT /api/jobs/:id');
   }
 });
 
 // Enhanced delete route to also remove associated applications
-router.delete("/:id", auth, async (req, res) => {
+router.delete(
+  "/:id",
+  auth,
+  requireOwnership(
+    (req) => req.params.id,
+    async (id) => await Job.findById(id)
+  ),
+  async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id);
-
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    // Check if user is the job owner
-    if (job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
-    }
+    const job = req.resource; // Job is already fetched and ownership verified by middleware
 
     // Delete all applications associated with this job
     await Application.deleteMany({ job: job._id });
@@ -234,8 +226,7 @@ router.delete("/:id", auth, async (req, res) => {
 
     res.json({ message: "Job deleted successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'DELETE /api/jobs/:id');
   }
 });
 
@@ -247,7 +238,7 @@ router.get("/user/my-jobs", auth, requireRole("employer"), async (req, res) => {
 
     res.json({ jobs });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'GET /api/jobs/user/my-jobs');
   }
 });
 

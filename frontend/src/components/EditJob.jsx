@@ -43,7 +43,6 @@ const EditJob = () => {
           type: job.type || "full-time",
           salaryMin: job.salary?.min || "",
           salaryMax: job.salary?.max || "",
-          currency: job.salary?.currency || "INR",
           skills: job.skills ? job.skills.join(", ") : "",
           experience: job.experience || "",
           benefits: job.benefits ? job.benefits.join("\n") : "",

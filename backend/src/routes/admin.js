@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
 const { auth, requireAdmin } = require('../middleware/auth');
+const { handleError } = require('../utils/errorHandler');
 
 const router = express.Router();
 
@@ -33,8 +34,7 @@ router.get('/stats', auth, requireAdmin, async (req, res) => {
       recentJobs,
     });
   } catch (error) {
-    console.error('Failed to fetch admin stats', error);
-    res.status(500).json({ error: 'Failed to fetch admin statistics' });
+    handleError(error, res, 'GET /api/admin/stats');
   }
 });
 
@@ -46,8 +46,7 @@ router.get('/users', auth, requireAdmin, async (req, res) => {
 
     res.json({ users });
   } catch (error) {
-    console.error('Failed to fetch users', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    handleError(error, res, 'GET /api/admin/users');
   }
 });
 
@@ -60,8 +59,7 @@ router.get('/applications', auth, requireAdmin, async (req, res) => {
 
     res.json({ applications });
   } catch (error) {
-    console.error('Failed to fetch applications', error);
-    res.status(500).json({ error: 'Failed to fetch applications' });
+    handleError(error, res, 'GET /api/admin/applications');
   }
 });
 
@@ -95,8 +93,7 @@ router.delete('/users/:id', auth, requireAdmin, async (req, res) => {
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    console.error('Failed to delete user', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    handleError(error, res, 'DELETE /api/admin/users/:id');
   }
 });
 

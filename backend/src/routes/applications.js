@@ -1,8 +1,9 @@
 const express = require("express");
 const Application = require("../models/Application");
 const Job = require("../models/Job");
-const { auth, requireRole } = require("../middleware/auth");
+const { auth, requireRole, requireOwnership } = require("../middleware/auth");
 const Notification = require("../models/Notification");
+const { handleError } = require("../utils/errorHandler");
 
 const router = express.Router();
 
@@ -43,23 +44,20 @@ router.post("/:jobId", auth, requireRole("jobseeker"), async (req, res) => {
       application,
     });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'POST /api/applications/:jobId');
   }
 });
 
 // Fixed route to properly fetch job applications for employers
-router.get("/job/:jobId", auth, async (req, res) => {
+router.get(
+  "/job/:jobId",
+  auth,
+  requireOwnership(
+    (req) => req.params.jobId,
+    async (id) => await Job.findById(id)
+  ),
+  async (req, res) => {
   try {
-    const job = await Job.findById(req.params.jobId);
-
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    // Check if user is the job owner (employer) or an admin
-    if (job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
-    }
 
     const applications = await Application.find({ job: req.params.jobId })
       .populate("applicant", "name email phone profile")
@@ -67,7 +65,7 @@ router.get("/job/:jobId", auth, async (req, res) => {
 
     res.json({ applications });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'GET /api/applications/job/:jobId');
   }
 });
 
@@ -86,7 +84,7 @@ router.get("/my-applications", auth, requireRole("jobseeker"), async (req, res) 
 
     res.json({ applications });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'GET /api/applications/my-applications');
   }
 });
 
@@ -137,21 +135,20 @@ router.put("/:applicationId", auth, requireRole("employer"), async (req, res) =>
       application: updatedApplication,
     });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'PUT /api/applications/:applicationId');
   }
 });
 
-router.delete("/:applicationId", auth, async (req, res) => {
+router.delete(
+  "/:applicationId",
+  auth,
+  requireOwnership(
+    (req) => req.params.applicationId,
+    async (id) => await Application.findById(id)
+  ),
+  async (req, res) => {
   try {
-    const application = await Application.findById(req.params.applicationId);
-
-    if (!application) {
-      return res.status(404).json({ error: "Application not found" });
-    }
-
-    if (application.applicant.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
-    }
+    const application = req.resource; // Application is already fetched and ownership verified by middleware
 
     await Job.findByIdAndUpdate(application.job, {
       $pull: { applicants: application._id },
@@ -161,26 +158,24 @@ router.delete("/:applicationId", auth, async (req, res) => {
 
     res.json({ message: "Application withdrawn successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    handleError(error, res, 'DELETE /api/applications/:applicationId');
   }
 });
 
 // Update application by job seeker (only pending applications)
-router.put("/update/:applicationId", auth, requireRole("jobseeker"), async (req, res) => {
+router.put(
+  "/update/:applicationId",
+  auth,
+  requireRole("jobseeker"),
+  requireOwnership(
+    (req) => req.params.applicationId,
+    async (id) => await Application.findById(id)
+  ),
+  async (req, res) => {
   try {
     const { coverLetter, resume } = req.body;
     const applicationId = req.params.applicationId;
-
-    const application = await Application.findById(applicationId);
-    
-    if (!application) {
-      return res.status(404).json({ error: "Application not found" });
-    }
-
-    // Check if the application belongs to the current user
-    if (application.applicant.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "You can only update your own applications" });
-    }
+    const application = req.resource; // Application is already fetched and ownership verified by middleware
 
     // Only allow updating pending applications
     if (application.status !== 'pending') {
@@ -203,8 +198,7 @@ router.put("/update/:applicationId", auth, requireRole("jobseeker"), async (req,
       application: updatedApplication 
     });
   } catch (error) {
-    console.error('Failed to update application', error);
-    res.status(500).json({ error: "Failed to update application" });
+    handleError(error, res, 'PUT /api/applications/update/:applicationId');
   }
 });
 

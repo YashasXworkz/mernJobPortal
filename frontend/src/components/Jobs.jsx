@@ -162,7 +162,7 @@ const Jobs = () => {
             {jobs.length} jobs found
           </Badge>
           {isEmployer && (
-            <Badge bg="success">
+            <Badge bg="success" className="fs-6">
               <i className="fas fa-briefcase me-1"></i>
               You can Edit/Delete your jobs
             </Badge>
@@ -431,22 +431,51 @@ const Jobs = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the job posting "{jobToDelete?.title}"? This action cannot be undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDeleteJob}>
-            Delete Job
-          </Button>
-        </Modal.Footer>
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} size="sm" className="delete-modal">
+        <div className="glass-panel border-0 rounded-4 delete-modal-content">
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="gradient-text fw-bold">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Confirm Delete
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="border-0">
+            <p>
+              Are you sure you want to delete the job posting <strong>"{jobToDelete?.title}"</strong>?
+            </p>
+            <p className="text-muted small">This action cannot be undone.</p>
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <div className="d-flex gap-3 w-100 justify-content-end">
+              <Button 
+                variant="outline-light" 
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-3"
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={confirmDeleteJob}
+                className="px-4 py-2 rounded-3"
+              >
+                <i className="fas fa-trash me-2"></i>
+                Delete Job
+              </Button>
+            </div>
+          </Modal.Footer>
+        </div>
       </Modal>
+      <style>{`
+        .delete-modal-content {
+          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .delete-modal .modal-dialog:hover .delete-modal-content {
+          transform: translateY(-6px);
+          border-color: rgba(159, 116, 255, 0.55) !important;
+          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+        }
+      `}</style>
     </Container>
   );
 };

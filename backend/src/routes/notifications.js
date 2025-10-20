@@ -1,6 +1,7 @@
 const express = require('express');
 const { auth } = require('../middleware/auth');
 const Notification = require('../models/Notification');
+const { handleError } = require('../utils/errorHandler');
 
 const router = express.Router();
 
@@ -13,8 +14,7 @@ router.get('/', auth, async (req, res) => {
 
     res.json({ notifications });
   } catch (error) {
-    console.error('Failed to fetch notifications', error);
-    res.status(500).json({ error: 'Failed to fetch notifications' });
+    handleError(error, res, 'GET /api/notifications');
   }
 });
 
@@ -33,8 +33,7 @@ router.patch('/:notificationId/read', auth, async (req, res) => {
 
     res.json({ notification });
   } catch (error) {
-    console.error('Failed to mark notification as read', error);
-    res.status(500).json({ error: 'Failed to update notification' });
+    handleError(error, res, 'PATCH /api/notifications/:notificationId/read');
   }
 });
 
@@ -44,8 +43,7 @@ router.patch('/read-all', auth, async (req, res) => {
     await Notification.updateMany({ recipient: req.user._id, isRead: false }, { isRead: true });
     res.json({ success: true });
   } catch (error) {
-    console.error('Failed to mark notifications as read', error);
-    res.status(500).json({ error: 'Failed to update notifications' });
+    handleError(error, res, 'PATCH /api/notifications/read-all');
   }
 });
 

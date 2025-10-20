@@ -60,4 +60,42 @@ const requireRole = (role) => {
 
 const requireAdmin = requireRole('admin');
 
-module.exports = { auth, optionalAuth, requireRole, requireAdmin };
+/**
+ * Middleware to check resource ownership
+ * @param {Function} getResourceId - Function to extract resource ID from request
+ * @param {Function} getResourceOwner - Async function to get resource and check ownership
+ * @returns {Function} Middleware function
+ */
+const requireOwnership = (getResourceId, getResourceOwner) => {
+  return async (req, res, next) => {
+    try {
+      const resourceId = getResourceId(req);
+      const resource = await getResourceOwner(resourceId);
+
+      if (!resource) {
+        return res.status(404).json({ error: 'Resource not found' });
+      }
+
+      // Check if user is the owner or an admin
+      const isOwner = resource.postedBy 
+        ? resource.postedBy.toString() === req.user._id.toString()
+        : resource.user 
+          ? resource.user.toString() === req.user._id.toString()
+          : false;
+
+      const isAdmin = req.user.role === 'admin';
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ error: 'Not authorized to access this resource' });
+      }
+
+      // Attach resource to request for later use
+      req.resource = resource;
+      next();
+    } catch (error) {
+      return res.status(500).json({ error: 'Error checking ownership' });
+    }
+  };
+};
+
+module.exports = { auth, optionalAuth, requireRole, requireAdmin, requireOwnership };

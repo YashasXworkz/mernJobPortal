@@ -287,7 +287,7 @@ const PostJob = () => {
                   />
                 </Form.Group>
 
-                <div className="d-grid mt-4">
+                <div className="d-flex gap-3 mt-4">
                   <Button variant="primary" type="submit" size="lg" disabled={loading || !formData.title || !formData.company || !formData.location || !formData.description || !formData.requirements}>
                     {loading ? (
                       <>
@@ -297,6 +297,9 @@ const PostJob = () => {
                     ) : (
                       "Post Job"
                     )}
+                  </Button>
+                  <Button variant="secondary" size="lg" onClick={() => navigate(-1)}>
+                    Cancel
                   </Button>
                 </div>
               </Form>
