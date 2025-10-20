@@ -65,6 +65,9 @@ const Header = () => {
 
                 {user.role === "employer" && (
                   <>
+                    <Nav.Link as={Link} to="/jobs">
+                      My Jobs
+                    </Nav.Link>
                     <Nav.Link as={Link} to="/post-job">
                       Post Job
                     </Nav.Link>

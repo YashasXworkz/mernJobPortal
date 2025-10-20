@@ -48,6 +48,7 @@ const Jobs = () => {
   const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
+      setJobs([]); // Clear jobs immediately to prevent flash
       const params = {
         page,
         limit: 10,
@@ -60,18 +61,30 @@ const Jobs = () => {
       });
 
       const response = await api.get("/api/jobs", { params });
-      setJobs(response.data.jobs);
+      let fetchedJobs = response.data.jobs;
+      
+      // Filter to show only employer's jobs if user is an employer
+      if (user && user.role === "employer") {
+        const currentUserId = user.id ? user.id.toString() : null;
+        fetchedJobs = fetchedJobs.filter(job => {
+          const jobOwnerId = job.postedBy && job.postedBy._id ? job.postedBy._id.toString() : null;
+          return jobOwnerId === currentUserId;
+        });
+      }
+      
+      // Set jobs and loading to false together to prevent UI flash
+      setJobs(fetchedJobs);
       setTotalPages(response.data.totalPages || 1);
+      setLoading(false);
     } catch (err) {
       // Prevent duplicate toasts in React StrictMode
       if (toastIdRef.current) {
         toast.dismiss(toastIdRef.current);
       }
       toastIdRef.current = toast.error(err.response?.data?.error || "Failed to fetch jobs");
-    } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, user]);
 
   useEffect(() => {
     fetchJobs();
@@ -143,7 +156,7 @@ const Jobs = () => {
   return (
     <Container className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h2 fw-bold gradient-text">Job Listings</h1>
+        <h1 className="h2 fw-bold gradient-text">{isEmployer ? "My Job Listings" : "Job Listings"}</h1>
         <div className="d-flex align-items-center gap-3">
           <Badge bg="primary" className="fs-6">
             {jobs.length} jobs found
@@ -151,7 +164,7 @@ const Jobs = () => {
           {isEmployer && (
             <Badge bg="success">
               <i className="fas fa-briefcase me-1"></i>
-              Employer View
+              You can Edit/Delete your jobs
             </Badge>
           )}
         </div>
@@ -241,7 +254,7 @@ const Jobs = () => {
 
       {loading && <LoadingSpinner message="Loading jobs..." />}
 
-      <Row className="g-4">
+      {!loading && <Row className="g-4">
         {jobs.map((job) => {
           const companyInfo = job.postedBy?.company;
           const companyLogo = companyInfo?.logo;
@@ -351,21 +364,17 @@ const Jobs = () => {
                       {!loading && isEmployer && isJobOwner(job) && (
                         <div className="d-flex flex-column gap-2">
                           <Button
-                            variant="outline-light"
-                            size="sm"
+                            variant="outline-success"
                             onClick={() => handleEditJob(job._id)}
-                            className="d-flex align-items-center justify-content-center"
                           >
-                            <i className="fas fa-edit me-1"></i>
+                            <i className="fas fa-pen me-2"></i>
                             Edit
                           </Button>
                           <Button
-                            variant="outline-light"
-                            size="sm"
+                            variant="outline-danger"
                             onClick={() => handleDeleteJob(job)}
-                            className="d-flex align-items-center justify-content-center"
                           >
-                            <i className="fas fa-trash me-1"></i>
+                            <i className="fas fa-trash-alt me-2"></i>
                             Delete
                           </Button>
                         </div>
@@ -377,16 +386,27 @@ const Jobs = () => {
             </Col>
           );
         })}
-      </Row>
+      </Row>}
 
       {!loading && jobs.length === 0 && (
         <div className="text-center py-5">
-          <i className="fas fa-search fa-3x text-muted mb-3"></i>
-          <h4 className="text-muted mb-3">No jobs found</h4>
-          <p className="text-muted mb-4">Try adjusting your search criteria or browse all jobs.</p>
-          <Button variant="primary" onClick={clearFilters}>
-            Clear Filters
-          </Button>
+          <i className={`fas ${isEmployer ? 'fa-briefcase' : 'fa-search'} fa-3x text-muted mb-3`}></i>
+          <h4 className="text-muted mb-3">{isEmployer ? 'No jobs posted yet' : 'No jobs found'}</h4>
+          <p className="text-muted mb-4">
+            {isEmployer 
+              ? 'Start by posting your first job to find great talent!' 
+              : 'Try adjusting your search criteria or browse all jobs.'}
+          </p>
+          {isEmployer ? (
+            <Button variant="primary" as={Link} to="/post-job">
+              <i className="fas fa-plus me-2"></i>
+              Post Your First Job
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          )}
         </div>
       )}
 
