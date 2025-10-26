@@ -317,6 +317,12 @@ const Profile = () => {
                               <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
                             </div>
                           )}
+                          {!formData.resume && !resumeUploading && (
+                            <div className="mt-2 small text-muted">
+                              <i className="fas fa-info-circle me-1"></i>
+                              No resume uploaded. Please upload to apply for jobs.
+                            </div>
+                          )}
                           {formData.resume && !resumeUploading && (
                             <div className="mt-2 small">
                               <strong>Current file:</strong>{" "}

@@ -456,6 +456,12 @@ const JobDetails = () => {
                   </div>
                 ) : (
                   <div>
+                    {!user?.profile?.resume && !applicationData.resume && !resumeUploading && (
+                      <div className="mb-2 small text-muted">
+                        <i className="fas fa-info-circle me-1"></i>
+                        No resume in profile. Please upload one to apply.
+                      </div>
+                    )}
                     <Form.Control
                       type="file"
                       accept=".pdf,.doc,.docx"
