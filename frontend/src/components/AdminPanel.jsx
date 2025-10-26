@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminApi } from "../lib/api";
+import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Modal, Row, Table } from "react-bootstrap";
 import toast from "react-hot-toast";
@@ -38,8 +38,8 @@ const AdminPanel = () => {
       setLoading(true);
 
       const [statsResponse, usersResponse] = await Promise.all([
-        adminApi.get("/stats"),
-        adminApi.get("/users"),
+        api.get("/api/admin/stats"),
+        api.get("/api/admin/users"),
       ]);
 
       const { stats: adminStats, recentJobs } = statsResponse.data;
@@ -57,7 +57,7 @@ const AdminPanel = () => {
     if (!userToDelete) return;
 
     try {
-      await adminApi.delete(`/users/${userToDelete._id}`);
+      await api.delete(`/api/admin/users/${userToDelete._id}`);
       setUsers((prev) => prev.filter((u) => u._id !== userToDelete._id));
       const updatedUsers = users.filter((u) => u._id !== userToDelete._id);
       setStats((prev) => ({

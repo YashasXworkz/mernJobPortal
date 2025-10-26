@@ -11,14 +11,4 @@ export const APPLICATION_STATUSES = [
   { value: 'accepted', label: 'Accepted' }
 ];
 
-/**
- * Get status label by value
- * @param {string} value - Status value
- * @returns {string} Status label
- */
-export const getStatusLabel = (value) => {
-  const status = APPLICATION_STATUSES.find(s => s.value === value);
-  return status ? status.label : value;
-};
-
 export default APPLICATION_STATUSES;

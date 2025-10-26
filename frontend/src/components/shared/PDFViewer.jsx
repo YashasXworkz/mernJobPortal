@@ -8,11 +8,10 @@ import "@react-pdf-viewer/default-layout/lib/styles/index.css";
  * Used across: Profile, JobDetails, MyApplications, Applications
  */
 const PDFViewer = ({ fileUrl }) => {
+  // Using default layout plugin for toolbar controls (zoom, download, print)
+  // Sidebar tabs are hidden by default in the configuration
   const defaultLayoutPluginInstance = defaultLayoutPlugin({
-    // eslint-disable-next-line no-unused-vars
-    sidebarTabs: (_defaultTabs) => [
-      // Remove sidebar tabs to keep it clean
-    ],
+    sidebarTabs: () => [], // Empty array to hide sidebar
   });
 
   return (

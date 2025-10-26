@@ -23,6 +23,5 @@ const createClient = (baseURL) => {
 };
 
 export const api = createClient(API_BASE);
-export const adminApi = createClient(`${API_BASE}/api/admin`);
 
 export default api;

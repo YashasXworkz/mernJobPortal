@@ -88,18 +88,28 @@ router.get("/my-applications", auth, requireRole("jobseeker"), async (req, res) 
   }
 });
 
-router.put("/:applicationId", auth, requireRole("employer"), async (req, res) => {
+router.put(
+  "/:applicationId",
+  auth,
+  requireRole("employer"),
+  requireOwnership(
+    (req) => req.params.applicationId,
+    async (id) => {
+      // Fetch application and populate job for ownership check
+      // Employer owns the JOB, not the application (jobseeker owns application)
+      const application = await Application.findById(id).populate("job");
+      return application ? application.job : null;
+    }
+  ),
+  async (req, res) => {
   try {
     const { status, notes, interviewDate, interviewNotes } = req.body;
 
+    // Fetch application again with full details (middleware only populates job for ownership check)
     const application = await Application.findById(req.params.applicationId).populate("job");
 
     if (!application) {
       return res.status(404).json({ error: "Application not found" });
-    }
-
-    if (application.job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: "Access denied" });
     }
 
     const previousStatus = application.status;
