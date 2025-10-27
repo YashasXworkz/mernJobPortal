@@ -1,8 +1,11 @@
 # MERN Job Portal
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/YashasXworkz/mernJobPortal)
+
 A full-stack job portal application connecting job seekers and employers. Built with React, Node.js, Express, and MongoDB.
 
 ## Features
+
 - **User Authentication** - Register/Login for job seekers, employers, and admin
 - **Job Management** - Post, edit, delete, and search jobs
 - **Application System** - Apply for jobs and track application status
@@ -11,6 +14,7 @@ A full-stack job portal application connecting job seekers and employers. Built 
 - **Responsive Design** - Works on desktop and mobile devices
 
 ## Tech Stack
+
 - **Frontend:** React, Bootstrap, React Router
 - **Backend:** Node.js, Express.js, MongoDB
 - **Authentication:** JWT tokens
@@ -18,12 +22,15 @@ A full-stack job portal application connecting job seekers and employers. Built 
 - **UI:** React Bootstrap, Toast notifications
 
 ## Prerequisites
+
 - Node.js (v16 or higher)
 - MongoDB (local or MongoDB Atlas)
 - Cloudinary account (for file uploads)
 
 ## Environment Setup
+
 Create `backend/.env` file:
+
 ```
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/jobportal
@@ -34,7 +41,9 @@ CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 ## Installation & Setup
+
 1. **Install Dependencies:**
+
    ```bash
    # Backend
    cd backend
@@ -46,12 +55,14 @@ CLOUDINARY_API_SECRET=your_api_secret
    ```
 
 2. **Seed Database (Optional):**
+
    ```bash
    cd backend
    node src/seeds.js
    ```
 
 3. **Start Development Servers:**
+
    ```bash
    # Terminal 1 - Backend
    cd backend
