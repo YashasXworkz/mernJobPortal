@@ -352,6 +352,18 @@ textarea::placeholder {
   transition: transform 240ms ease, box-shadow 240ms ease;
   position: relative;
   overflow: hidden;
+  animation: fadeInJob 250ms ease-out;
+}
+
+@keyframes fadeInJob {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .job-card:hover {
@@ -429,7 +441,7 @@ textarea::placeholder {
 }
 
 .application-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   box-shadow: var(--shadow-elevated), var(--shadow-glow);
 }
 
@@ -741,7 +753,7 @@ textarea::placeholder {
 }
 
 .filter-select {
-  height: 3.2rem;
+  height: 3.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(148, 163, 184, 0.25) !important;
   background: rgba(15, 23, 42, 0.65) !important;
@@ -757,7 +769,7 @@ textarea::placeholder {
 }
 
 .filter-btn {
-  height: 3.2rem;
+  height: 3.5rem;
   border-radius: 1rem;
   justify-content: center;
   gap: 0.4rem;
@@ -771,7 +783,7 @@ textarea::placeholder {
 }
 
 .filter-input .form-control {
-  height: 3.2rem;
+  height: 3.5rem;
   border-radius: 0 1rem 1rem 0 !important;
   border: 1px solid rgba(148, 163, 184, 0.25) !important;
   background: rgba(15, 23, 42, 0.45) !important;
@@ -1027,7 +1039,7 @@ textarea::placeholder {
     font-size: 0.875rem;
     min-width: 38px;
   }
-  
+
   .pagination .page-item:first-child .page-link,
   .pagination .page-item:last-child .page-link {
     padding: 0.4rem 1rem;

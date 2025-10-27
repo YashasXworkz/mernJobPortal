@@ -37,18 +37,22 @@ const Jobs = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Only for initial load
   const [filters, setFilters] = useState(initialFilters);
+  const [searchInput, setSearchInput] = useState(""); // Separate state for search input
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
   const toastIdRef = useRef(null);
+  const debounceTimerRef = useRef(null);
 
   const fetchJobs = useCallback(async () => {
     try {
-      setLoading(true);
-      setJobs([]); // Clear jobs immediately to prevent flash
+      // Only show loading on initial page load (when no jobs exist yet)
+      if (jobs.length === 0) {
+        setLoading(true);
+      }
       const params = {
         page,
         limit: 10,
@@ -90,13 +94,37 @@ const Jobs = () => {
     fetchJobs();
   }, [fetchJobs]);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    setPage(1);
+    
+    if (name === 'search') {
+      // Update search input immediately for UI responsiveness
+      setSearchInput(value);
+      
+      // Clear existing timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      // Debounce: only update filters state after 400ms of no typing
+      debounceTimerRef.current = setTimeout(() => {
+        setFilters((prev) => ({ ...prev, search: value }));
+        setPage(1);
+      }, 400);
+    } else {
+      // For dropdowns, update immediately (no debounce needed)
+      setFilters((prev) => ({ ...prev, [name]: value }));
+      setPage(1);
+    }
   };
 
   const handleSearch = (event) => {
@@ -106,6 +134,7 @@ const Jobs = () => {
 
   const clearFilters = () => {
     setFilters(initialFilters);
+    setSearchInput(""); // Clear search input display
     setPage(1);
   };
 
@@ -158,11 +187,11 @@ const Jobs = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h2 fw-bold gradient-text">{isEmployer ? "My Job Listings" : "Job Listings"}</h1>
         <div className="d-flex align-items-center gap-3">
-          <Badge bg="primary" className="fs-6">
+          <Badge bg="primary" className="status-pill fs-6">
             {jobs.length} jobs found
           </Badge>
           {isEmployer && (
-            <Badge bg="success" className="fs-6">
+            <Badge bg="success" className="status-pill fs-6">
               <i className="fas fa-briefcase me-1"></i>
               You can Edit/Delete your jobs
             </Badge>
@@ -183,7 +212,7 @@ const Jobs = () => {
                     type="text"
                     name="search"
                     placeholder="Search jobs, companies..."
-                    value={filters.search}
+                    value={searchInput}
                     onChange={handleFilterChange}
                   />
                 </InputGroup>
@@ -242,7 +271,14 @@ const Jobs = () => {
                     <i className="fas fa-search me-2"></i>
                     Search
                   </Button>
-                  <Button variant="outline-light" type="button" onClick={clearFilters} className="filter-btn">
+                  <Button 
+                    variant="outline-light" 
+                    type="button" 
+                    onClick={clearFilters} 
+                    className="filter-btn"
+                    title="Clear all filters"
+                    aria-label="Clear all filters"
+                  >
                     <i className="fas fa-times"></i>
                   </Button>
                 </div>
@@ -252,10 +288,11 @@ const Jobs = () => {
         </Card.Body>
       </Card>
 
-      {loading && <LoadingSpinner message="Loading jobs..." />}
-
-      {!loading && <Row className="g-4">
-        {jobs.map((job) => {
+      {loading ? (
+        <LoadingSpinner message="Loading jobs..." />
+      ) : (
+        <Row className="g-4">
+          {jobs.map((job) => {
           const companyInfo = job.postedBy?.company;
           const companyLogo = companyInfo?.logo;
           const companyName = companyInfo?.name || job.company;
@@ -386,28 +423,31 @@ const Jobs = () => {
             </Col>
           );
         })}
-      </Row>}
-
-      {!loading && jobs.length === 0 && (
-        <div className="text-center py-5">
-          <i className={`fas ${isEmployer ? 'fa-briefcase' : 'fa-search'} fa-3x text-muted mb-3`}></i>
-          <h4 className="text-muted mb-3">{isEmployer ? 'No jobs posted yet' : 'No jobs found'}</h4>
-          <p className="text-muted mb-4">
-            {isEmployer 
-              ? 'Start by posting your first job to find great talent!' 
-              : 'Try adjusting your search criteria or browse all jobs.'}
-          </p>
-          {isEmployer ? (
-            <Button variant="primary" as={Link} to="/post-job">
-              <i className="fas fa-plus me-2"></i>
-              Post Your First Job
-            </Button>
-          ) : (
-            <Button variant="primary" onClick={clearFilters}>
-              Clear Filters
-            </Button>
-          )}
-        </div>
+        
+        {jobs.length === 0 && (
+          <Col xs={12}>
+            <div className="text-center py-5">
+              <i className={`fas ${isEmployer ? 'fa-briefcase' : 'fa-search'} fa-3x text-muted mb-3`}></i>
+              <h4 className="text-muted mb-3">{isEmployer ? 'No jobs posted yet' : 'No jobs found'}</h4>
+              <p className="text-muted mb-4">
+                {isEmployer 
+                  ? 'Start by posting your first job to find great talent!' 
+                  : 'Try adjusting your search criteria or browse all jobs.'}
+              </p>
+              {isEmployer ? (
+                <Button variant="primary" as={Link} to="/post-job">
+                  <i className="fas fa-plus me-2"></i>
+                  Post Your First Job
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={clearFilters}>
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </Col>
+        )}
+      </Row>
       )}
 
       {totalPages > 1 && (
@@ -468,12 +508,7 @@ const Jobs = () => {
       </Modal>
       <style>{`
         .delete-modal-content {
-          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
-        }
-        .delete-modal .modal-dialog:hover .delete-modal-content {
-          transform: translateY(-6px);
-          border-color: rgba(159, 116, 255, 0.55) !important;
-          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+          transition: box-shadow 240ms ease, border-color 240ms ease;
         }
       `}</style>
     </Container>

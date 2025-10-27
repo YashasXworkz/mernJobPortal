@@ -13,7 +13,12 @@ router.get("/", async (req, res) => {
     let query = { status: "active" };
 
     if (search) {
-      query.$text = { $search: search };
+      // Use $or with regex for partial word matching (e.g., "Dev" matches "DevOps")
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { company: { $regex: search, $options: "i" } }
+      ];
     }
 
     if (location) {

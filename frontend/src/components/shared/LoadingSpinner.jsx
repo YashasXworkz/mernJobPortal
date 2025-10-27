@@ -7,8 +7,13 @@ import { Container, Spinner } from "react-bootstrap";
 const LoadingSpinner = ({ message = "Loading...", size = "default" }) => {
   if (size === "small") {
     return (
-      <div className="d-flex align-items-center justify-content-center py-3">
-        <Spinner animation="border" size="sm" variant="primary" className="me-2" />
+      <div 
+        className="d-flex align-items-center justify-content-center py-3"
+        role="status" 
+        aria-live="polite" 
+        aria-label={message}
+      >
+        <Spinner animation="border" size="sm" variant="primary" className="me-2" aria-hidden="true" />
         <span className="text-muted">{message}</span>
       </div>
     );
@@ -16,8 +21,13 @@ const LoadingSpinner = ({ message = "Loading...", size = "default" }) => {
 
   return (
     <Container className="py-5">
-      <div className="d-flex align-items-center justify-content-center gap-3">
-        <Spinner animation="border" variant="primary" />
+      <div 
+        className="d-flex align-items-center justify-content-center gap-3"
+        role="status" 
+        aria-live="polite" 
+        aria-label={message}
+      >
+        <Spinner animation="border" variant="primary" aria-hidden="true" />
         <div className="text-muted">{message}</div>
       </div>
     </Container>

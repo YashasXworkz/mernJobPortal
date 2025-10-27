@@ -37,6 +37,16 @@ const Applications = () => {
     setApplications(filterApplications(allApplications, statusFilter));
   }, [statusFilter, allApplications]);
 
+  // Auto-fetch applications when job selection changes
+  useEffect(() => {
+    if (selectedJob) {
+      fetchApplications();
+    } else {
+      setApplications([]);
+      setAllApplications([]);
+    }
+  }, [selectedJob]);
+
   const filterApplications = (apps, status) => {
     if (!status) return apps;
     return apps.filter((app) => app.status === status);
@@ -44,10 +54,13 @@ const Applications = () => {
 
   const fetchJobs = async () => {
     try {
+      setLoading(true);
       const response = await api.get("/api/jobs/user/my-jobs");
       setJobs(response.data.jobs);
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to fetch jobs");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -240,7 +253,7 @@ const Applications = () => {
             Filter Applications
           </h5>
           <Row className="g-3">
-            <Col md={4}>
+            <Col md={6}>
               <Form.Group>
                 <Form.Label className="text-muted">Filter by Job</Form.Label>
                 <Form.Select
@@ -258,7 +271,7 @@ const Applications = () => {
               </Form.Group>
             </Col>
 
-            <Col md={4}>
+            <Col md={6}>
               <Form.Group>
                 <Form.Label className="text-muted">Filter by Status</Form.Label>
                 <Form.Select
@@ -276,22 +289,6 @@ const Applications = () => {
               </Form.Group>
             </Col>
 
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="text-muted">&nbsp;</Form.Label>
-                <div className="d-grid">
-                  <Button
-                    variant="primary"
-                    onClick={fetchApplications}
-                    disabled={!selectedJob}
-                    className="filter-btn"
-                  >
-                    <i className="fas fa-search me-2"></i>
-                    Apply Filters
-                  </Button>
-                </div>
-              </Form.Group>
-            </Col>
           </Row>
         </Card.Body>
       </Card>

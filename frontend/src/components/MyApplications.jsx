@@ -125,7 +125,7 @@ const MyApplications = () => {
     <Container className="py-5">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <h1 className="h2 fw-bold gradient-text mb-0">My Applications</h1>
-        <Badge bg="primary" className="fs-6 status-pill text-uppercase">
+        <Badge bg="primary" className="status-pill fs-6">
           {applications.length} applications
         </Badge>
       </div>
