@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from "react-bootstrap";
 import toast from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import PDFViewerModal from "./shared/PDFViewerModal.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 import { useResumeUpload } from "../hooks/useResumeUpload.js";
 import { formatDate, getStatusBadge } from "../lib/utils.js";
 
 const MyApplications = () => {
+  const { user } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showResumeModal, setShowResumeModal] = useState(false);
@@ -17,6 +20,7 @@ const MyApplications = () => {
   const [editingApplication, setEditingApplication] = useState(null);
   const [editFormData, setEditFormData] = useState({ coverLetter: '', resume: null });
   const [updating, setUpdating] = useState(false);
+  const [userWantsCustomResume, setUserWantsCustomResume] = useState(false);
   const { uploading: resumeUploading, validateAndUploadResume } = useResumeUpload();
 
   useEffect(() => {
@@ -53,6 +57,7 @@ const MyApplications = () => {
 
   const handleEditApplication = (application) => {
     setEditingApplication(application);
+    setUserWantsCustomResume(false); // Reset for each edit
     
     // Extract filename from URL or use default
     let filename = 'resume.pdf';
@@ -76,6 +81,8 @@ const MyApplications = () => {
   const handleResumeUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    setUserWantsCustomResume(true);
 
     const result = await validateAndUploadResume(file);
     if (result) {
@@ -211,10 +218,7 @@ const MyApplications = () => {
                   <Row className="g-4">
                     <Col md={6}>
                       <h5 className="mb-3 gradient-text">Cover Letter</h5>
-                      <div
-                        className="glass-panel p-3 border-0"
-                        style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                      >
+                      <div className="glass-panel glass-panel-content p-3 border-0">
                         <p className="small mb-0" style={{ whiteSpace: "pre-line" }}>
                           {application.coverLetter}
                         </p>
@@ -243,10 +247,7 @@ const MyApplications = () => {
                   {application.notes && (
                     <div className="mt-4">
                       <h5 className="mb-2 gradient-text">Employer Notes</h5>
-                      <div
-                        className="glass-panel p-3 border-0"
-                        style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                      >
+                      <div className="glass-panel glass-panel-content p-3 border-0">
                         <p className="small mb-0">{application.notes}</p>
                       </div>
                     </div>
@@ -255,10 +256,7 @@ const MyApplications = () => {
                   {application.interviewDate && (
                     <div className="mt-4">
                       <h5 className="mb-2 gradient-text">Interview Scheduled</h5>
-                      <div
-                        className="glass-panel p-3 border-0"
-                        style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                      >
+                      <div className="glass-panel glass-panel-content p-3 border-0">
                         <p className="small mb-0">
                           <strong>Date:</strong> {formatDate(application.interviewDate)}
                           {application.interviewNotes && (
@@ -279,25 +277,12 @@ const MyApplications = () => {
       </Row>
 
       {/* Resume Preview Modal */}
-      <Modal
+      <PDFViewerModal
         show={showResumeModal}
         onHide={() => setShowResumeModal(false)}
-        size="lg"
-        centered
-        contentClassName="bg-white"
-      >
-        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
-          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0">
-          {selectedResume && <PDFViewer fileUrl={selectedResume} />}
-        </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
-          <Button variant="secondary" onClick={() => setShowResumeModal(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        fileUrl={selectedResume}
+        title="Resume Preview"
+      />
 
       {/* Edit Application Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" className="edit-modal">
@@ -328,47 +313,102 @@ const MyApplications = () => {
                     Resume
                     <span className="ms-2 small fw-normal text-muted">(Optional - Upload new resume)</span>
                   </Form.Label>
-                  <Form.Control
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleResumeUpload}
-                    className="file-input-modern"
-                    disabled={resumeUploading}
-                  />
-                  {resumeUploading && (
-                    <div className="mt-2 text-muted small">
-                      <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
-                    </div>
-                  )}
-                  {editFormData.resume && !resumeUploading && (
-                    <div className="mt-2 small">
-                      <strong>New resume uploaded:</strong>{" "}
-                      <span className="text-muted me-2">{editFormData.resumeFilename}</span>
+                  
+                  {user?.profile?.resume && !userWantsCustomResume && !editFormData.resume ? (
+                    <div 
+                      className="py-3 px-4 d-flex flex-column gap-3"
+                      style={{
+                        backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                        border: '2px solid rgba(52, 211, 153, 0.3)',
+                        borderRadius: '12px',
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="fas fa-check-circle" style={{ color: '#34d399', fontSize: '1.1rem' }}></i>
+                          <div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#34d399' }}>
+                              Using your profile resume
+                            </div>
+                            <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                              Your current profile resume will be kept for this application
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleViewResume(user.profile.resume);
+                          }}
+                          className="p-0 text-decoration-none gradient-text"
+                          style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                        >
+                          <i className="fas fa-eye me-1"></i>View Resume
+                        </Button>
+                      </div>
                       <Button
-                        variant="link"
-                        onClick={() => handleViewResume(editFormData.resume)}
-                        className="p-0 text-decoration-none gradient-text"
-                        style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setUserWantsCustomResume(true);
+                        }}
+                        className="align-self-start"
                       >
-                        <i className="fas fa-eye me-1"></i>View Resume
+                        <i className="fas fa-upload me-2"></i>Upload Different Resume
                       </Button>
                     </div>
-                  )}
-                  {editFormData.currentResumeUrl && !editFormData.resume && (
-                    <div className="mt-2 small">
-                      <strong>Current file:</strong>{" "}
-                      <span className="text-muted me-2">{editFormData.currentResumeFilename || "resume.pdf"}</span>
-                      <Button
-                        variant="link"
-                        onClick={() => handleViewResume(editFormData.currentResumeUrl)}
-                        className="p-0 text-decoration-none gradient-text"
-                        style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
-                      >
-                        <i className="fas fa-eye me-1"></i>View Resume
-                      </Button>
+                  ) : (
+                    <div>
+                      <Form.Control
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleResumeUpload}
+                        className="file-input-modern"
+                        disabled={resumeUploading}
+                      />
+                      {resumeUploading && (
+                        <div className="mt-2 text-muted small">
+                          <Spinner animation="border" size="sm" className="me-2" /> Uploading resume...
+                        </div>
+                      )}
+                      {editFormData.resume && !resumeUploading && (
+                        <div className="mt-2 small">
+                          <strong>New resume uploaded:</strong>{" "}
+                          <span className="text-muted me-2">{editFormData.resumeFilename}</span>
+                          <Button
+                            variant="link"
+                            onClick={() => handleViewResume(editFormData.resume)}
+                            className="p-0 text-decoration-none gradient-text"
+                            style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                          >
+                            <i className="fas fa-eye me-1"></i>View Resume
+                          </Button>
+                        </div>
+                      )}
+                      {editFormData.currentResumeUrl && !editFormData.resume && !userWantsCustomResume && (
+                        <div className="mt-2 small">
+                          <strong>Current file:</strong>{" "}
+                          <span className="text-muted me-2">{editFormData.currentResumeFilename || "resume.pdf"}</span>
+                          <Button
+                            variant="link"
+                            onClick={() => handleViewResume(editFormData.currentResumeUrl)}
+                            className="p-0 text-decoration-none gradient-text"
+                            style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+                          >
+                            <i className="fas fa-eye me-1"></i>View Resume
+                          </Button>
+                        </div>
+                      )}
+                      <small className="text-muted mt-2 d-block">
+                        {user?.profile?.resume && !userWantsCustomResume 
+                          ? "Leave empty to keep current resume" 
+                          : "Upload a new resume or leave empty to keep the existing one"}
+                      </small>
                     </div>
                   )}
-                  <small className="text-muted mt-2 d-block">Leave empty to keep current resume</small>
                 </Form.Group>
               </Col>
             </Row>

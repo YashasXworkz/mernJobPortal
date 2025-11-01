@@ -48,7 +48,7 @@ router.post("/:jobId", auth, requireRole("jobseeker"), async (req, res) => {
   }
 });
 
-// Fixed route to properly fetch job applications for employers
+// Fixed route to properly fetch job applications for employers with pagination
 router.get(
   "/job/:jobId",
   auth,
@@ -58,12 +58,22 @@ router.get(
   ),
   async (req, res) => {
   try {
+    const { page = 1, limit = 50 } = req.query;
 
     const applications = await Application.find({ job: req.params.jobId })
       .populate("applicant", "name email phone profile")
-      .sort({ appliedAt: -1 });
+      .sort({ appliedAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
 
-    res.json({ applications });
+    const total = await Application.countDocuments({ job: req.params.jobId });
+
+    res.json({
+      applications,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      total
+    });
   } catch (error) {
     handleError(error, res, 'GET /api/applications/job/:jobId');
   }

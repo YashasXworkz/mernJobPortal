@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { Button, Card, Col, Container, Form, Image, Modal, Row, Spinner } from "react-bootstrap";
 import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import PDFViewerModal from "./shared/PDFViewerModal.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 import { useResumeUpload } from "../hooks/useResumeUpload.js";
 
@@ -24,7 +25,7 @@ const initialFormState = {
 };
 
 const Profile = () => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser: updateAuthUser } = useAuth();
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
@@ -126,7 +127,11 @@ const Profile = () => {
       const updateData = {
         name: formData.name,
         phone: formData.phone,
-        profile: {
+      };
+
+      // Only include profile if user is a jobseeker
+      if (user?.role === "jobseeker") {
+        updateData.profile = {
           bio: formData.bio,
           skills: formData.skills
             .split(",")
@@ -136,20 +141,21 @@ const Profile = () => {
           location: formData.location,
           resume: formData.resume,
           resumeFilename: formData.resumeFilename,
-        },
-        company: {
+        };
+      }
+
+      // Only include company if user is an employer
+      if (user?.role === "employer") {
+        updateData.company = {
           name: formData.companyName,
           description: formData.companyDescription,
           website: formData.companyWebsite,
           location: formData.companyLocation,
           logo: formData.companyLogo,
-        },
-      };
-
-      if (user?.role === "jobseeker") {
-        delete updateData.company;
+        };
       }
 
+      // Remove undefined or empty top-level fields
       Object.keys(updateData).forEach((key) => {
         if (updateData[key] === undefined || updateData[key] === "") {
           delete updateData[key];
@@ -158,6 +164,7 @@ const Profile = () => {
 
       const response = await api.put("/api/auth/profile", updateData);
       setUser(response.data.user);
+      updateAuthUser(response.data.user); // Update AuthContext as well
       toast.success("Profile updated successfully");
     } catch (err) {
       toast.error(err.response?.data?.error || "Failed to update profile");
@@ -458,25 +465,12 @@ const Profile = () => {
       </Row>
 
       {/* PDF Viewer Modal */}
-      <Modal 
-        show={showPdfViewer} 
-        onHide={() => setShowPdfViewer(false)} 
-        size="lg" 
-        centered
-        contentClassName="bg-white"
-      >
-        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
-          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0">
-          {formData.resume && <PDFViewer fileUrl={formData.resume} />}
-        </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
-          <Button variant="secondary" onClick={() => setShowPdfViewer(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <PDFViewerModal
+        show={showPdfViewer}
+        onHide={() => setShowPdfViewer(false)}
+        fileUrl={formData.resume}
+        title="Resume Preview"
+      />
     </Container>
   );
 };

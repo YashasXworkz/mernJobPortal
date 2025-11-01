@@ -6,9 +6,9 @@ const { handleError } = require("../utils/errorHandler");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", optionalAuth, async (req, res) => {
   try {
-    const { search, location, type, experience, skills, page = 1, limit = 10 } = req.query;
+    const { search, location, type, experience, skills, page = 1, limit = 10, postedBy } = req.query;
 
     let query = { status: "active" };
 
@@ -36,6 +36,11 @@ router.get("/", async (req, res) => {
     if (skills) {
       const skillsArray = skills.split(",");
       query.skills = { $in: skillsArray };
+    }
+
+    // Filter by employer - only show jobs posted by the authenticated user
+    if (postedBy === 'me' && req.user) {
+      query.postedBy = req.user._id;
     }
 
     // Include postedBy information in the jobs listing

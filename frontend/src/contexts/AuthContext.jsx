@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import api from '../lib/api';
+import { NotificationsProvider } from './NotificationsContext.jsx';
 
 const AuthContext = createContext(null);
 
@@ -15,47 +16,6 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setNotificationsLoading(true);
-      const response = await api.get('/api/notifications');
-      setNotifications(response.data.notifications || []);
-    } catch (error) {
-      // Ignore errors caused by unauthenticated requests
-      if (error.response?.status === 401) {
-        setNotifications([]);
-      }
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }, []);
-
-  const markNotificationRead = useCallback(async (notificationId) => {
-    try {
-      await api.patch(`/api/notifications/${notificationId}/read`);
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification._id === notificationId ? { ...notification, isRead: true } : notification
-        )
-      );
-    } catch (error) {
-      // Silent fail - notifications are non-critical convenience features
-      // State is already updated optimistically on frontend
-    }
-  }, []);
-
-  const markAllNotificationsRead = useCallback(async () => {
-    try {
-      await api.patch('/api/notifications/read-all');
-      setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
-    } catch (error) {
-      // Silent fail - notifications are non-critical convenience features
-      // State is already updated optimistically on frontend
-    }
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -85,7 +45,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       setUser(user);
-      fetchNotifications();
 
       return { success: true };
     } catch (error) {
@@ -104,7 +63,6 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       setUser(user);
-      fetchNotifications();
 
       return { success: true };
     } catch (error) {
@@ -119,39 +77,26 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete api.defaults.headers.common.Authorization;
     setUser(null);
-    setNotifications([]);
   };
 
-  useEffect(() => {
-    if (user?._id) {
-      fetchNotifications();
-    } else {
-      setNotifications([]);
-    }
-  }, [user?._id, fetchNotifications]);
-
-  const unreadNotificationCount = useMemo(
-    () => notifications.filter((notification) => !notification.isRead).length,
-    [notifications]
-  );
+  const updateUser = (updatedUserData) => {
+    setUser(updatedUserData);
+  };
 
   const value = {
     user,
     login,
     register,
     logout,
-    loading,
-    notifications,
-    notificationsLoading,
-    unreadNotificationCount,
-    fetchNotifications,
-    markNotificationRead,
-    markAllNotificationsRead
+    updateUser,
+    loading
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      <NotificationsProvider userId={user?._id}>
+        {children}
+      </NotificationsProvider>
     </AuthContext.Provider>
   );
 };

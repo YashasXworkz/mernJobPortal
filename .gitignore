@@ -33,3 +33,7 @@ backend/build/
 coverage/
 frontend/coverage/
 backend/coverage/
+
+# Custom / Project-specific
+.claude/
+nul

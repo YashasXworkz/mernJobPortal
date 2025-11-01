@@ -4,7 +4,10 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row } from "react-bootstrap";
 import toast from "react-hot-toast";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import PDFViewerModal from "./shared/PDFViewerModal.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
+import ApplicationStats from "./shared/ApplicationStats.jsx";
+import ApplicationFilters from "./shared/ApplicationFilters.jsx";
 import { formatDate, getStatusBadge } from "../lib/utils.js";
 import { APPLICATION_STATUSES } from "../constants/applicationStatuses.js";
 
@@ -198,100 +201,16 @@ const Applications = () => {
       </div>
 
       {/* Dashboard Stats Cards */}
-      <Row className="g-4 mb-4">
-        <Col md={3}>
-          <Card className="glass-panel border-0 text-center">
-            <Card.Body className="py-4">
-              <div className="mb-2">
-                <i className="fas fa-clock fa-2x text-warning"></i>
-              </div>
-              <h4 className="mb-1">{applications.filter((app) => app.status === "pending").length}</h4>
-              <small className="text-muted">Pending Review</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="glass-panel border-0 text-center">
-            <Card.Body className="py-4">
-              <div className="mb-2">
-                <i className="fas fa-star fa-2x text-success"></i>
-              </div>
-              <h4 className="mb-1">{applications.filter((app) => app.status === "shortlisted").length}</h4>
-              <small className="text-muted">Shortlisted</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="glass-panel border-0 text-center">
-            <Card.Body className="py-4">
-              <div className="mb-2">
-                <i className="fas fa-check-circle fa-2x text-info"></i>
-              </div>
-              <h4 className="mb-1">{applications.filter((app) => app.status === "accepted").length}</h4>
-              <small className="text-muted">Accepted</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="glass-panel border-0 text-center">
-            <Card.Body className="py-4">
-              <div className="mb-2">
-                <i className="fas fa-calendar-alt fa-2x text-primary"></i>
-              </div>
-              <h4 className="mb-1">{applications.filter((app) => app.interviewDate).length}</h4>
-              <small className="text-muted">Interviews Scheduled</small>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <ApplicationStats applications={applications} />
 
       {/* Filters Card */}
-      <Card className="glass-panel border-0 mb-4">
-        <Card.Body className="p-4">
-          <h5 className="gradient-text mb-3">
-            <i className="fas fa-filter me-2"></i>
-            Filter Applications
-          </h5>
-          <Row className="g-3">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label className="text-muted">Filter by Job</Form.Label>
-                <Form.Select
-                  value={selectedJob}
-                  onChange={handleJobChange}
-                  className="filter-select"
-                >
-                  <option value="">Select a Job</option>
-                  {jobs.map((job) => (
-                    <option key={job._id} value={job._id}>
-                      {job.title} at {job.company}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label className="text-muted">Filter by Status</Form.Label>
-                <Form.Select
-                  className="filter-select"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  disabled={!selectedJob}
-                >
-                  {APPLICATION_STATUSES.map((status) => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-
-          </Row>
-        </Card.Body>
-      </Card>
+      <ApplicationFilters
+        jobs={jobs}
+        selectedJob={selectedJob}
+        statusFilter={statusFilter}
+        onJobChange={handleJobChange}
+        onStatusChange={(e) => setStatusFilter(e.target.value)}
+      />
 
       {loading && <LoadingSpinner message="Loading applications..." />}
 
@@ -384,10 +303,7 @@ const Applications = () => {
                 <Row className="g-4">
                   <Col md={6}>
                     <h5 className="mb-3 gradient-text">Cover Letter</h5>
-                    <div
-                      className="glass-panel p-3 border-0"
-                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                    >
+                    <div className="glass-panel glass-panel-content p-3 border-0">
                       <p className="small mb-0" style={{ whiteSpace: "pre-line" }}>
                         {application.coverLetter}
                       </p>
@@ -396,10 +312,7 @@ const Applications = () => {
 
                   <Col md={6}>
                     <h5 className="mb-3 gradient-text">Applicant Details</h5>
-                    <div
-                      className="glass-panel p-3 border-0"
-                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                    >
+                    <div className="glass-panel glass-panel-content p-3 border-0">
                       <div className="small">
                         {/* Basic applicant info always shown */}
                         <p className="mb-2">
@@ -491,10 +404,7 @@ const Applications = () => {
                 {application.notes && (
                   <div className="mt-4">
                     <h5 className="mb-2 gradient-text">Your Notes</h5>
-                    <div
-                      className="glass-panel p-3 border-0"
-                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                    >
+                    <div className="glass-panel glass-panel-content p-3 border-0">
                       <p className="small mb-0">{application.notes}</p>
                     </div>
                   </div>
@@ -503,10 +413,7 @@ const Applications = () => {
                 {application.interviewDate && (
                   <div className="mt-4">
                     <h5 className="mb-2 gradient-text">Interview Scheduled</h5>
-                    <div
-                      className="glass-panel p-3 border-0"
-                      style={{ backdropFilter: "blur(16px)", boxShadow: "none" }}
-                    >
+                    <div className="glass-panel glass-panel-content p-3 border-0">
                       <p className="small mb-0">
                         <strong>Date:</strong> {formatDate(application.interviewDate)}
                         {application.interviewNotes && (
@@ -662,28 +569,12 @@ const Applications = () => {
       `}</style>
 
       {/* PDF Viewer Modal */}
-      <Modal 
-        show={showPdfViewer} 
-        onHide={() => setShowPdfViewer(false)} 
-        size="lg"
-        centered
-        contentClassName="bg-white"
-      >
-        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
-          <Modal.Title style={{ color: '#1f2937' }}>{currentApplicantName}'s Resume</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0">
-          {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
-        </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowPdfViewer(false)}
-          >
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <PDFViewerModal
+        show={showPdfViewer}
+        onHide={() => setShowPdfViewer(false)}
+        fileUrl={currentResumeUrl}
+        title={`${currentApplicantName}'s Resume`}
+      />
     </Container>
   );
 };

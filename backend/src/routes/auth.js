@@ -3,10 +3,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { handleError } = require('../utils/errorHandler');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password, role, phone } = req.body;
 
@@ -53,11 +54,14 @@ router.post('/register', async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
+        _id: user._id,
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        profile: user.profile,
+        company: user.company
       }
     });
   } catch (error) {
@@ -65,7 +69,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -89,11 +93,14 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
+        _id: user._id,
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        profile: user.profile,
+        company: user.company
       }
     });
   } catch (error) {
@@ -105,6 +112,7 @@ router.get('/me', auth, async (req, res) => {
   try {
     res.json({
       user: {
+        _id: req.user._id,
         id: req.user._id,
         name: req.user.name,
         email: req.user.email,
@@ -140,6 +148,7 @@ router.put('/profile', auth, async (req, res) => {
     res.json({
       message: 'Profile updated successfully',
       user: {
+        _id: user._id,
         id: user._id,
         name: user.name,
         email: user.email,

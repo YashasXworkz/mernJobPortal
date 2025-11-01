@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useNotifications } from "../contexts/NotificationsContext.jsx";
 import { Badge, Button, Container, Dropdown, Nav, Navbar, NavDropdown, Spinner } from "react-bootstrap";
 
 const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const { user, logout } = useAuth();
   const {
-    user,
-    logout,
     notifications,
     notificationsLoading,
     unreadNotificationCount,
     markNotificationRead,
     markAllNotificationsRead,
-  } = useAuth();
+  } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = () => {

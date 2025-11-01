@@ -77,11 +77,14 @@ const requireOwnership = (getResourceId, getResourceOwner) => {
       }
 
       // Check if user is the owner or an admin
-      const isOwner = resource.postedBy 
+      // Support different ownership fields: postedBy (jobs), applicant (applications), user (generic)
+      const isOwner = resource.postedBy
         ? resource.postedBy.toString() === req.user._id.toString()
-        : resource.user 
-          ? resource.user.toString() === req.user._id.toString()
-          : false;
+        : resource.applicant
+          ? resource.applicant.toString() === req.user._id.toString()
+          : resource.user
+            ? resource.user.toString() === req.user._id.toString()
+            : false;
 
       const isAdmin = req.user.role === 'admin';
 

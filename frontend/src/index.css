@@ -672,8 +672,20 @@ textarea::placeholder {
 
 /* Glass panel variant with enhanced blur and no shadow - used for nested content */
 .glass-panel-content {
-  backdrop-filter: blur(16px);
-  box-shadow: none;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: none !important;
+}
+
+/* Glass panel variant for blur(18px) - used in job details and applications */
+.glass-panel-blur-18 {
+  backdrop-filter: blur(18px) !important;
+  box-shadow: none !important;
+}
+
+/* Glass panel variant for blur(20px) - used in profile and applications */
+.glass-panel-blur-20 {
+  backdrop-filter: blur(20px) !important;
+  box-shadow: none !important;
 }
 
 .dashboard-table {

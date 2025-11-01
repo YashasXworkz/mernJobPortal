@@ -5,6 +5,7 @@ import { Badge, Button, Card, Col, Container, Form, Row, Spinner, Modal } from "
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import PDFViewer from "./shared/PDFViewer.jsx";
+import PDFViewerModal from "./shared/PDFViewerModal.jsx";
 import LoadingSpinner from "./shared/LoadingSpinner.jsx";
 import { useResumeUpload } from "../hooks/useResumeUpload.js";
 
@@ -456,10 +457,12 @@ const JobDetails = () => {
                   </div>
                 ) : (
                   <div>
-                    {!user?.profile?.resume && !applicationData.resume && !resumeUploading && (
+                    {!applicationData.resume && !resumeUploading && (
                       <div className="mb-2 small text-muted">
                         <i className="fas fa-info-circle me-1"></i>
-                        No resume in profile. Please upload one to apply.
+                        {!user?.profile?.resume 
+                          ? "No resume in profile. Please upload one to apply."
+                          : "Please upload a resume to apply."}
                       </div>
                     )}
                     <Form.Control
@@ -553,28 +556,12 @@ const JobDetails = () => {
       `}</style>
 
       {/* PDF Viewer Modal */}
-      <Modal 
-        show={showPdfViewer} 
-        onHide={() => setShowPdfViewer(false)} 
-        size="lg"
-        centered
-        contentClassName="bg-white"
-      >
-        <Modal.Header closeButton style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' }}>
-          <Modal.Title style={{ color: '#1f2937' }}>Resume Preview</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0">
-          {currentResumeUrl && <PDFViewer fileUrl={currentResumeUrl} />}
-        </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e5e7eb' }}>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowPdfViewer(false)}
-          >
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <PDFViewerModal
+        show={showPdfViewer}
+        onHide={() => setShowPdfViewer(false)}
+        fileUrl={currentResumeUrl}
+        title="Resume Preview"
+      />
     </Container>
   );
 };
