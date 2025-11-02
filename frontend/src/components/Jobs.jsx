@@ -91,7 +91,7 @@ const Jobs = () => {
     };
   }, []);
 
-  const handleFilterChange = (event) => {
+  const handleFilterChange = useCallback((event) => {
     const { name, value } = event.target;
     
     if (name === 'search') {
@@ -103,17 +103,17 @@ const Jobs = () => {
         clearTimeout(debounceTimerRef.current);
       }
       
-      // Debounce: only update filters state after 400ms of no typing
+      // Debounce: only update filters state after 300ms of no typing (reduced from 400ms)
       debounceTimerRef.current = setTimeout(() => {
         setFilters((prev) => ({ ...prev, search: value }));
         setPage(1);
-      }, 400);
+      }, 300);
     } else {
       // For dropdowns, update immediately (no debounce needed)
       setFilters((prev) => ({ ...prev, [name]: value }));
       setPage(1);
     }
-  };
+  }, []);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -156,18 +156,21 @@ const Jobs = () => {
   const isEmployer = user && user.role === "employer";
 
   // Check if the current user is the owner of a job
-  const isJobOwner = (job) => {
+  const isJobOwner = useCallback((job) => {
     // Check if user and job data exist
     if (!user || !job.postedBy) {
       return false;
     }
 
+    // Check role inline for better memoization
+    const isEmployerRole = user.role === "employer";
+    
     // Make sure both IDs are strings for comparison
     const jobOwnerId = job.postedBy && job.postedBy._id ? job.postedBy._id.toString() : null;
     const currentUserId = user._id ? user._id.toString() : null;
 
-    return isEmployer && jobOwnerId && currentUserId && jobOwnerId === currentUserId;
-  };
+    return isEmployerRole && jobOwnerId && currentUserId && jobOwnerId === currentUserId;
+  }, [user]);
 
   return (
     <Container className="py-4">
@@ -201,6 +204,7 @@ const Jobs = () => {
                     placeholder="Search jobs, companies..."
                     value={searchInput}
                     onChange={handleFilterChange}
+                    autoComplete="off"
                   />
                 </InputGroup>
               </Col>

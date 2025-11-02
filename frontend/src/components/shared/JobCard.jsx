@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Badge, Button, Card, Image } from "react-bootstrap";
 import { formatSalary } from "../../lib/utils.js";
 
-const JobCard = ({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }) => {
+const JobCard = memo(({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }) => {
   const companyInfo = job.postedBy?.company;
   const companyLogo = companyInfo?.logo;
   const companyName = companyInfo?.name || job.company;
@@ -35,6 +36,7 @@ const JobCard = ({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }) => 
                     src={companyLogo}
                     alt={`${companyName || "Company"} logo`}
                     rounded
+                    loading="lazy"
                     style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "15px" }}
                   />
                 ) : (
@@ -137,6 +139,8 @@ const JobCard = ({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }) => 
       </Card.Body>
     </Card>
   );
-};
+});
+
+JobCard.displayName = 'JobCard';
 
 export default JobCard;
