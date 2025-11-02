@@ -111,26 +111,28 @@ const JobCard = memo(({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }
             )}
           </div>
 
-          <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto">
+          <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto" style={{ maxWidth: '200px' }}>
             <small className="text-muted d-block">Posted {new Date(job.createdAt).toLocaleDateString()}</small>
             <Button variant="primary" as={Link} to={`/jobs/${job._id}`} className="view-details-btn">
               View Details
             </Button>
             {!loading && isEmployer && isJobOwner && (
-              <div className="d-flex flex-column gap-2">
+              <div className="d-flex gap-2">
                 <Button
                   variant="outline-success"
                   onClick={() => onEdit(job._id)}
+                  title="Edit Job"
+                  className="flex-fill"
                 >
-                  <i className="fas fa-pen me-2"></i>
-                  Edit
+                  <i className="fas fa-pen"></i>
                 </Button>
                 <Button
                   variant="outline-danger"
                   onClick={() => onDelete(job)}
+                  title="Delete Job"
+                  className="flex-fill"
                 >
-                  <i className="fas fa-trash-alt me-2"></i>
-                  Delete
+                  <i className="fas fa-trash-alt"></i>
                 </Button>
               </div>
             )}
