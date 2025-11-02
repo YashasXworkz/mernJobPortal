@@ -20,7 +20,7 @@ const JobCard = memo(({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }
     <Card className="job-card glass-panel border-0">
       <Card.Body className="p-4">
         <div className="d-flex flex-column flex-lg-row align-items-start gap-4">
-          <div className="flex-grow-1 w-100">
+          <div className="flex-grow-1" style={{ minWidth: 0 }}>
             <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
               <div
                 className="d-flex align-items-center justify-content-center rounded-4 shadow-sm"
@@ -98,20 +98,20 @@ const JobCard = memo(({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }
             </p>
 
             {job.skills && job.skills.length > 0 && (
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2 align-items-center">
                 {job.skills.slice(0, 5).map((skill, index) => (
                   <span key={`skill-${index}`} className="skill-tag">
                     {skill}
                   </span>
                 ))}
                 {job.skills.length > 5 && (
-                  <small className="text-muted">+{job.skills.length - 5} more skills</small>
+                  <span className="text-muted" style={{ fontSize: '0.875rem' }}>+{job.skills.length - 5} more skills</span>
                 )}
               </div>
             )}
           </div>
 
-          <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch w-100 w-lg-auto" style={{ maxWidth: '200px' }}>
+          <div className="job-card-actions text-lg-end d-flex flex-column gap-2 align-items-stretch flex-shrink-0" style={{ width: '180px' }}>
             <small className="text-muted d-block">Posted {new Date(job.createdAt).toLocaleDateString()}</small>
             <Button variant="primary" as={Link} to={`/jobs/${job._id}`} className="view-details-btn">
               View Details
