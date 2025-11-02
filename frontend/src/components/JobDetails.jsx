@@ -168,7 +168,7 @@ const JobDetails = () => {
       const applicantDoc = application.applicant;
       if (!applicantDoc) return false;
       const applicantId = typeof applicantDoc === "object" && applicantDoc._id ? applicantDoc._id : applicantDoc;
-      return applicantId?.toString() === (user.id || user._id);
+      return applicantId?.toString() === user._id?.toString();
     });
 
   return (
@@ -363,7 +363,7 @@ const JobDetails = () => {
               <div className="glass-panel p-3 border-0" style={{ backdropFilter: "blur(18px)", boxShadow: "none" }}>
                 <ul className="mb-0">
                   {job.benefits.map((benefit, index) => (
-                    <li key={benefit + index}>{benefit}</li>
+                    <li key={`benefit-${index}`}>{benefit}</li>
                   ))}
                 </ul>
               </div>
@@ -375,7 +375,7 @@ const JobDetails = () => {
               <h5 className="mb-3 gradient-text">Required Skills</h5>
               <div className="d-flex flex-wrap gap-2">
                 {job.skills.map((skill, index) => (
-                  <Badge key={skill + index} bg="primary" className="me-1">
+                  <Badge key={`skill-${index}`} bg="primary" className="me-1">
                     {skill}
                   </Badge>
                 ))}
@@ -544,16 +544,6 @@ const JobDetails = () => {
           </Modal.Footer>
         </div>
       </Modal>
-      <style>{`
-        .delete-modal-content {
-          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
-        }
-        .delete-modal .modal-dialog:hover .delete-modal-content {
-          transform: translateY(-6px);
-          border-color: rgba(159, 116, 255, 0.55) !important;
-          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
-        }
-      `}</style>
 
       {/* PDF Viewer Modal */}
       <PDFViewerModal

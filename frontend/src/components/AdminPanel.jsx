@@ -337,16 +337,6 @@ const AdminPanel = () => {
           </Modal.Footer>
         </div>
       </Modal>
-      <style>{`
-        .delete-modal-content {
-          transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
-        }
-        .delete-modal .modal-dialog:hover .delete-modal-content {
-          transform: translateY(-6px);
-          border-color: rgba(159, 116, 255, 0.55) !important;
-          box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
-        }
-      `}</style>
     </Container>
   );
 };

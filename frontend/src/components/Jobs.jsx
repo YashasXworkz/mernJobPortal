@@ -163,9 +163,8 @@ const Jobs = () => {
     }
 
     // Make sure both IDs are strings for comparison
-    // Note: Backend returns 'id' for users but '_id' for MongoDB documents
     const jobOwnerId = job.postedBy && job.postedBy._id ? job.postedBy._id.toString() : null;
-    const currentUserId = user.id ? user.id.toString() : null; // Use 'id' not '_id'
+    const currentUserId = user._id ? user._id.toString() : null;
 
     return isEmployer && jobOwnerId && currentUserId && jobOwnerId === currentUserId;
   };
@@ -375,11 +374,6 @@ const Jobs = () => {
           </Modal.Footer>
         </div>
       </Modal>
-      <style>{`
-        .delete-modal-content {
-          transition: box-shadow 240ms ease, border-color 240ms ease;
-        }
-      `}</style>
     </Container>
   );
 };

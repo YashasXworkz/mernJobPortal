@@ -6,7 +6,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <LoadingSpinner message="Loading..." />;
+    return <LoadingSpinner message="Loading page..." />;
   }
 
   if (!user) {

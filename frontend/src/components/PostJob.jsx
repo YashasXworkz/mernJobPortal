@@ -58,7 +58,7 @@ const PostJob = () => {
 
   const formatSalary = (value) => {
     if (!value) return '';
-    return parseInt(value).toLocaleString('en-IN');
+    return parseInt(value, 10).toLocaleString('en-IN');
   };
 
   const handleSubmit = async (event) => {
@@ -69,10 +69,10 @@ const PostJob = () => {
       // Process salary data
       const salaryData = {};
       if (formData.salaryMin) {
-        salaryData.min = parseInt(formData.salaryMin);
+        salaryData.min = parseInt(formData.salaryMin, 10);
       }
       if (formData.salaryMax) {
-        salaryData.max = parseInt(formData.salaryMax);
+        salaryData.max = parseInt(formData.salaryMax, 10);
       }
 
       const jobData = {

@@ -82,7 +82,7 @@ const EditJob = () => {
 
   const formatSalary = (value) => {
     if (!value) return '';
-    return parseInt(value).toLocaleString('en-IN');
+    return parseInt(value, 10).toLocaleString('en-IN');
   };
 
   const handleSubmit = async (event) => {

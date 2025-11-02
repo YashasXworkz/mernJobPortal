@@ -98,7 +98,7 @@ const JobCard = ({ job, isEmployer, isJobOwner, onEdit, onDelete, loading }) => 
             {job.skills && job.skills.length > 0 && (
               <div className="d-flex flex-wrap gap-2">
                 {job.skills.slice(0, 5).map((skill, index) => (
-                  <span key={skill + index} className="skill-tag">
+                  <span key={`skill-${index}`} className="skill-tag">
                     {skill}
                   </span>
                 ))}

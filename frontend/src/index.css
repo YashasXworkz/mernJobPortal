@@ -1057,3 +1057,20 @@ textarea::placeholder {
     padding: 0.4rem 1rem;
   }
 }
+
+/* ============================================
+   Modal Styles - Consolidated from components
+   ============================================ */
+.delete-modal-content,
+.status-modal-content,
+.edit-modal-content {
+  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+}
+
+.modal-dialog:hover .delete-modal-content,
+.modal-dialog:hover .status-modal-content,
+.modal-dialog:hover .edit-modal-content {
+  transform: translateY(-6px);
+  border-color: rgba(159, 116, 255, 0.55) !important;
+  box-shadow: var(--shadow-elevated), var(--shadow-glow) !important;
+}

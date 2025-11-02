@@ -55,7 +55,6 @@ router.post('/register', authLimiter, async (req, res) => {
       token,
       user: {
         _id: user._id,
-        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -94,7 +93,6 @@ router.post('/login', authLimiter, async (req, res) => {
       token,
       user: {
         _id: user._id,
-        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -113,7 +111,6 @@ router.get('/me', auth, async (req, res) => {
     res.json({
       user: {
         _id: req.user._id,
-        id: req.user._id,
         name: req.user.name,
         email: req.user.email,
         role: req.user.role,
